@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zone Planner — council land-use solitaire</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#E9E0CA;          /* oatmeal — old survey paper */
+    --panel:#F2EBD9;
+    --panel-2:#E3D8BE;
+    --cell:#DCCFB1;        /* open land */
+    --line:#C3B28D;        /* sepia rule */
+    --text:#3A2E20;        /* ink */
+    --muted:#8B7A5C;
+    --gold:#9A6A1C;        /* council brass, inked for paper */
+    --banked:#3E7A4E;      /* surveyor's green stamp */
+    --espresso:#33241A;    /* mountain fill */
+    --paper-white:#F6F0E1;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:radial-gradient(ellipse 120% 90% at 50% 0%, #F0E8D4, var(--bg) 70%);
+    color:var(--text);
+    font-family:"Space Grotesk",system-ui,sans-serif;
+    display:flex;flex-direction:column;align-items:center;
+    padding:20px 16px 40px;
+  }
+  header{
+    width:100%;max-width:1020px;
+    display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;
+    margin-bottom:18px;
+  }
+  h1{font-size:1.5rem;letter-spacing:.14em;font-weight:700;text-transform:uppercase}
+  h1 .dot{color:var(--gold)}
+  .tagline{font-family:"IBM Plex Mono",monospace;font-size:.75rem;color:var(--muted);letter-spacing:.06em}
+  .spacer{flex:1}
+  button{
+    font-family:"IBM Plex Mono",monospace;font-size:.75rem;letter-spacing:.05em;
+    background:var(--panel-2);color:var(--text);border:1px solid var(--line);
+    border-radius:8px;padding:8px 14px;cursor:pointer;
+  }
+  button:hover{border-color:var(--muted)}
+  button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+  button:disabled{opacity:.4;cursor:default}
+
+  .layout{display:flex;gap:22px;width:100%;max-width:1060px;align-items:flex-start}
+  .main{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center}
+  .toprow{display:flex;gap:14px;width:min(100%,560px);margin-bottom:14px;align-items:stretch}
+  .toprow .build-panel{flex:1;min-width:0}
+  @media (max-width:900px){
+    .layout{flex-direction:column-reverse;align-items:center}
+    .side{max-width:560px}
+  }
+  @media (max-width:480px){
+    .toprow{flex-direction:column}
+    .total-row{flex-direction:row;justify-content:space-between;align-items:baseline}
+  }
+
+  /* ---------- board ---------- */
+  .board-wrap{width:min(100%,560px)}
+  #board{
+    display:grid;
+    grid-template-columns:repeat(11,minmax(0,1fr));
+    grid-template-rows:repeat(11,minmax(0,1fr));
+    gap:3px;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:8px;
+    width:100%;
+    aspect-ratio:1/1;
+    touch-action:manipulation;
+  }
+  .cell{
+    background:var(--cell);
+    border-radius:4px;
+    position:relative;
+    min-width:0;min-height:0;
+    line-height:1;
+    cursor:pointer;
+    transition:background-color .08s linear;
+    display:flex;align-items:center;justify-content:center;
+  }
+  @media (prefers-reduced-motion:reduce){ .cell{transition:none} }
+  .cell.filled{cursor:default}
+  .cell.mountain{
+    background:var(--espresso);cursor:default;
+    color:var(--paper-white);font-size:clamp(.6rem,2.6vw,1rem);user-select:none;
+  }
+  .cell.ghost{opacity:.6}
+  .cell.ghost-bad{background:#D89B84 !important;box-shadow:inset 0 0 0 2px #A8482C}
+  .hint{
+    font-family:"IBM Plex Mono",monospace;font-size:.7rem;color:var(--muted);
+    margin-top:10px;letter-spacing:.04em;text-align:center;
+  }
+
+  /* ---------- sidebar ---------- */
+  .side{flex:0 0 408px;display:flex;flex-direction:column;gap:14px;width:100%}
+  .panel{
+    background:var(--panel);border:1px solid var(--line);
+    border-radius:var(--radius);padding:14px 16px;
+  }
+  .panel h2{
+    font-family:"IBM Plex Mono",monospace;font-size:.68rem;font-weight:500;
+    color:var(--muted);letter-spacing:.18em;text-transform:uppercase;margin-bottom:10px;
+  }
+
+  /* ---------- the mayor's plan (the four-season ledger) ---------- */
+  .season{
+    border:1px solid var(--line);border-radius:8px;
+    padding:9px 11px;margin-bottom:9px;background:var(--panel-2);
+  }
+  .season:last-child{margin-bottom:0}
+  .season.future{opacity:.55}
+  .season.current{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold)}
+  .season-head{
+    display:flex;justify-content:space-between;align-items:baseline;gap:8px;
+    font-family:"IBM Plex Mono",monospace;font-size:.7rem;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--muted);margin-bottom:6px;
+  }
+  .season.current .season-head{color:var(--gold)}
+  .season-head .stamp{color:var(--banked);letter-spacing:.08em}
+  .instr{
+    display:flex;justify-content:space-between;gap:10px;align-items:baseline;
+    padding:4px 0;
+  }
+  .instr + .instr{border-top:1px dashed var(--line)}
+  .instr .iname{font-weight:700;font-size:.85rem}
+  .instr .idesc{font-size:.84rem;color:var(--muted);line-height:1.4;margin-top:1px}
+  .instr .ipts{
+    font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:.9rem;
+    color:var(--gold);white-space:nowrap;
+  }
+  .instr .ipts.banked{color:var(--banked)}
+  .instr .ipts .delta{color:var(--banked);font-size:.75rem;margin-left:4px}
+  .chip{
+    display:inline-block;width:.86em;height:.86em;border-radius:0px;
+    vertical-align:baseline;transform:translateY(1px);margin-right:2px;
+  }
+
+  /* ---------- this turn's build ---------- */
+  .build-row{display:flex;gap:12px;align-items:center}
+  .build-shape{
+    flex:0 0 92px;height:92px;background:var(--panel-2);
+    border:1px solid var(--line);border-radius:8px;
+    display:flex;align-items:center;justify-content:center;padding:8px;
+  }
+  .mini{display:grid;gap:2px;align-content:center;justify-content:center}
+  .mini div{border-radius:2px}
+  .build-info{flex:1;min-width:0}
+  .build-name{font-weight:700;font-size:1.02rem}
+  .build-type{
+    font-family:"IBM Plex Mono",monospace;font-size:.72rem;color:var(--muted);
+    letter-spacing:.06em;margin-top:2px;
+  }
+  .controls{display:flex;gap:8px;margin-top:10px}
+  .controls button{flex:1}
+  .turnline{
+    font-family:"IBM Plex Mono",monospace;font-size:.7rem;color:var(--muted);
+    margin-top:10px;letter-spacing:.06em;text-align:right;
+  }
+  .grant-msg{font-size:.82rem;color:var(--muted);line-height:1.5;margin-bottom:10px}
+  .grant-btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .grant-btns button{display:flex;align-items:center;justify-content:center;gap:6px}
+
+  /* ---------- total ---------- */
+  .total-row{
+    display:flex;flex-direction:column;justify-content:center;align-items:flex-end;
+    gap:4px;min-width:140px;font-family:"IBM Plex Mono",monospace;
+  }
+  .total-row .label{font-size:.68rem;letter-spacing:.18em;color:var(--muted);text-transform:uppercase;text-align:right}
+  .total-row .value{font-size:2rem;font-weight:600;color:var(--gold);line-height:1}
+  .total-row .value .delta{color:var(--banked);font-size:.95rem;margin-left:6px}
+
+  /* ---------- year-end review ---------- */
+  .overlay{
+    position:fixed;inset:0;background:rgba(45,33,22,.55);
+    display:flex;align-items:center;justify-content:center;padding:20px;z-index:10;
+  }
+  .overlay.hidden{display:none}
+  .modal{
+    background:var(--panel);border:1px solid var(--line);border-radius:14px;
+    padding:28px 30px;max-width:440px;width:100%;max-height:90vh;overflow:auto;
+  }
+  .modal h2{font-size:1.1rem;letter-spacing:.12em;text-transform:uppercase;margin-bottom:4px}
+  .modal .sub{font-family:"IBM Plex Mono",monospace;font-size:.72rem;color:var(--muted);margin-bottom:18px}
+  .modal .season-block{margin-bottom:12px}
+  .modal .season-title{
+    display:flex;justify-content:space-between;font-family:"IBM Plex Mono",monospace;
+    font-size:.7rem;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);
+    margin-bottom:3px;
+  }
+  .modal .season-title .pts{color:var(--banked)}
+  .modal .line{
+    display:flex;justify-content:space-between;font-size:.85rem;padding:5px 0 5px 12px;
+    border-bottom:1px dashed var(--line);
+  }
+  .modal .line .pts{font-family:"IBM Plex Mono",monospace;color:var(--gold)}
+  .modal .grand{display:flex;justify-content:space-between;align-items:baseline;margin:16px 0 20px}
+  .modal .grand .pts{font-family:"IBM Plex Mono",monospace;font-size:2rem;font-weight:600;color:var(--gold)}
+  .modal button{width:100%;padding:12px}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Zone<span class="dot">/</span>Planner</h1>
+  <span class="tagline">council land-use solitaire</span>
+  <span class="spacer"></span>
+  <button id="undoBtn">Undo</button>
+  <button id="newBtn">New year</button>
+</header>
+
+<div class="layout">
+  <div class="side">
+    <div class="panel">
+      <h2>The mayor's plan</h2>
+      <div id="plan"></div>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="toprow">
+      <div class="panel build-panel">
+        <h2>This turn's build</h2>
+        <div id="build"></div>
+        <div class="turnline" id="turnline"></div>
+      </div>
+
+      <div class="panel total-row">
+        <span class="label">Total score</span>
+        <span class="value" id="total">0</span>
+      </div>
+    </div>
+
+    <div class="board-wrap">
+      <div id="board" aria-label="11 by 11 block of land"></div>
+      <div class="hint"><b>R</b> rotate · <b>F</b> flip · click the land to build · ▲ mountains are unbuildable</div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay hidden" id="overlay">
+  <div class="modal">
+    <h2>Annual review</h2>
+    <div class="sub" id="overSub"></div>
+    <div id="overLines"></div>
+    <div class="grand"><span>Final score</span><span class="pts" id="overTotal"></span></div>
+    <button id="againBtn">Plan another year</button>
+  </div>
+</div>
+
+<script>
+"use strict";
+
+/* =====================================================================
+ *  ZONE PLANNER — game logic
+ *
+ *  You are a council employee zoning a block of land over one year.
+ *  The year has four seasons (spring 5 turns, summer 6, autumn 5,
+ *  winter 4 — 20 turns total). Each turn the council builds one
+ *  improvement card: a polyomino of a single type (farm, lake,
+ *  forest or city) drawn blind from a 20-card deck. If the dealt
+ *  card fits nowhere, the council grants a 1×1 of your choice.
+ *
+ *  The mayor's plan — two scoring instructions per season, all
+ *  visible from turn one — is evaluated at the end of each season
+ *  and the points are banked (frozen). Mountains block building;
+ *  they count as filled for row-completion but never as part of
+ *  any improvement.
+ *
+ *  Data structures:
+ *    THE BOARD is a flat array of 121 slots. Each slot is null
+ *    (open land), "mountain", or an improvement type id.
+ *    A CARD is { type, name, cells: [{row, col}, ...] } — offsets
+ *    from the card's own top-left corner. All cells share the
+ *    card's single improvement type.
+ * ===================================================================== */
+
+/* =====================================================================
+ * 1. CONSTANTS
+ * ===================================================================== */
+
+const GRID_SIZE = 11;
+const TOTAL_TURNS = 20;
+const MOUNTAIN_COUNT = 5;
+const MOUNTAIN = "mountain";
+
+const SEASONS = [
+  {name:"Spring", turns:5},
+  {name:"Summer", turns:6},
+  {name:"Autumn", turns:5},
+  {name:"Winter", turns:4},
+];
+// Turn index (0-based) at which each season ENDS: after these many
+// placements, that season's instructions are scored and banked.
+const SEASON_END = [5, 11, 16, 20];
+
+const TYPES = [
+  {id:"farm",   name:"Farm",   hex:"#D07F2E"},  /* ochre */
+  {id:"lake",   name:"Lake",   hex:"#4A86BC"},  /* washed prussian */
+  {id:"forest", name:"Forest", hex:"#578F55"},  /* verdigris */
+  {id:"city",   name:"City",   hex:"#8A8FA3"},  /* slate ink */
+];
+const TYPE_HEX  = Object.fromEntries(TYPES.map(t => [t.id, t.hex]));
+const TYPE_NAME = Object.fromEntries(TYPES.map(t => [t.id, t.name]));
+
+/* The shared shape library: 1 to 5 tiles. */
+const SHAPES = {
+  M1:[[0,0]],
+  D2:[[0,0],[0,1]],
+  I3:[[0,0],[0,1],[0,2]],
+  L3:[[0,0],[1,0],[1,1]],
+  I4:[[0,0],[0,1],[0,2],[0,3]],
+  O4:[[0,0],[0,1],[1,0],[1,1]],
+  T4:[[0,0],[0,1],[0,2],[1,1]],
+  S4:[[0,1],[0,2],[1,0],[1,1]],
+  L4:[[0,0],[1,0],[2,0],[2,1]],
+  P5:[[0,0],[0,1],[1,0],[1,1],[2,0]],
+  L5:[[0,0],[1,0],[2,0],[3,0],[3,1]],
+  T5:[[0,0],[0,1],[0,2],[1,1],[2,1]],
+};
+
+/*
+ * Each improvement type LEANS toward a silhouette without being
+ * locked to it: farms toward strips, lakes toward blobs, forests
+ * toward irregular clumps, cities toward compact blocks.
+ */
+const SHAPE_WEIGHTS = {
+  farm:   {M1:.2, D2:1,   I3:1,  L3:.4, I4:1,   O4:.15, T4:.2, S4:.2, L4:1,  P5:.1, L5:.4, T5:.1},
+  lake:   {M1:.4, D2:.4,  I3:.2, L3:.4, I4:.15, O4:1,   T4:.2, S4:1,  L4:.2, P5:1,  L5:.1, T5:.1},
+  forest: {M1:.4, D2:.4,  I3:.4, L3:1,  I4:.1,  O4:.15, T4:1,  S4:1,  L4:.2, P5:.2, L5:.1, T5:1},
+  city:   {M1:.15,D2:.2,  I3:.4, L3:.2, I4:.1,  O4:1,   T4:1,  S4:.2, L4:1,  P5:1,  L5:.1, T5:.4},
+};
+
+/* Flavour names, keyed by type then shape. */
+const CARD_NAMES = {
+  farm:   {M1:"Windmill",     D2:"Beehives",     I3:"Berry Rows",    L3:"Hop Garden",
+           I4:"Grain Silo Row",O4:"Dairy Paddock",T4:"Orchard Cross", S4:"Terraced Paddies",
+           L4:"Cattle Run",   P5:"Homestead Farm",L5:"Irrigation Boom",T5:"Vineyard Estate"},
+  lake:   {M1:"Spring Pool",  D2:"Duck Pond",    I3:"Canal Reach",   L3:"Creek Bend",
+           I4:"River Run",    O4:"Mill Pond",    T4:"Estuary",       S4:"Meander",
+           L4:"Marina",       P5:"Deep Basin",   L5:"Long Fjord",    T5:"Delta Fork"},
+  forest: {M1:"Lone Oak",     D2:"Twin Pines",   I3:"Windbreak",     L3:"Copse Corner",
+           I4:"Shelter Belt", O4:"Old Growth Stand",T4:"Ranger Junction",S4:"Wild Thicket",
+           L4:"Timber Reserve",P5:"Deep Woods",  L5:"Ridge Forest",  T5:"Fern Gully"},
+  city:   {M1:"Corner Store", D2:"Row Houses",   I3:"Main Street",   L3:"Bus Depot",
+           I4:"High Street",  O4:"Town Square",  T4:"Civic Centre",  S4:"Terrace Blocks",
+           L4:"Rail Yard",    P5:"Market District",L5:"Ring Road",   T5:"Town Hall Precinct"},
+};
+
+const ORTHOGONAL_NEIGHBOURS = [[-1,0],[1,0],[0,-1],[0,1]];
+
+/* =====================================================================
+ * 2. SMALL UTILITIES
+ * ===================================================================== */
+
+const randomItem = array => array[Math.floor(Math.random() * array.length)];
+const cellIndex = (row, col) => row * GRID_SIZE + col;
+const isInsideGrid = (row, col) =>
+  row >= 0 && row < GRID_SIZE && col >= 0 && col < GRID_SIZE;
+const deepClone = value => JSON.parse(JSON.stringify(value));
+
+function shuffledCopy(array){
+  const copy = [...array];
+  for(let i = copy.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
+/** Pick a shape key using the weight table for the given type. */
+function randomShapeForType(typeId){
+  const weights = SHAPE_WEIGHTS[typeId];
+  const entries = Object.entries(weights);
+  const totalWeight = entries.reduce((sum, [, w]) => sum + w, 0);
+  let remaining = Math.random() * totalWeight;
+  for(const [shape, weight] of entries){
+    remaining -= weight;
+    if(remaining <= 0) return shape;
+  }
+  return entries[0][0];
+}
+
+/* =====================================================================
+ * 3. CARDS — creating, transforming and placing improvement cards
+ * ===================================================================== */
+
+/** Build the year's 20-card deck. Types are uniform; shapes lean per type. */
+function createDeck(){
+  return Array.from({length: TOTAL_TURNS}, () => {
+    const type = randomItem(TYPES).id;
+    const shape = randomShapeForType(type);
+    return {
+      type,
+      name: CARD_NAMES[type][shape],
+      cells: SHAPES[shape].map(([row, col]) => ({row, col})),
+    };
+  });
+}
+
+/** The 1×1 the council grants when the dealt card fits nowhere. */
+function createGrantCard(typeId){
+  return {type: typeId, name:"Council Grant", cells:[{row:0, col:0}]};
+}
+
+function normaliseCells(cells){
+  const minRow = Math.min(...cells.map(c => c.row));
+  const minCol = Math.min(...cells.map(c => c.col));
+  cells.forEach(c => { c.row -= minRow; c.col -= minCol; });
+  return cells;
+}
+
+/** Return a new card rotated 90 degrees clockwise. */
+function rotateCardClockwise(card){
+  const height = Math.max(...card.cells.map(c => c.row)) + 1;
+  const rotated = card.cells.map(c => ({row: c.col, col: height - 1 - c.row}));
+  return {...card, cells: normaliseCells(rotated)};
+}
+
+/** Return a new card mirrored left-to-right. */
+function flipCardHorizontally(card){
+  const width = Math.max(...card.cells.map(c => c.col)) + 1;
+  const flipped = card.cells.map(c => ({row: c.row, col: width - 1 - c.col}));
+  return {...card, cells: normaliseCells(flipped)};
+}
+
+/** The cell nearest the centroid sits under the cursor. */
+function findAnchorCellIndex(card){
+  const cells = card.cells;
+  const centroidRow = cells.reduce((s, c) => s + c.row, 0) / cells.length;
+  const centroidCol = cells.reduce((s, c) => s + c.col, 0) / cells.length;
+  let bestIndex = 0, bestDistance = Infinity;
+  cells.forEach((cell, i) => {
+    const d = (cell.row - centroidRow) ** 2 + (cell.col - centroidCol) ** 2;
+    if(d < bestDistance){ bestDistance = d; bestIndex = i; }
+  });
+  return bestIndex;
+}
+
+/** Absolute board cells the card would cover if placed at the cursor. */
+function getPlacementCells(card, cursorRow, cursorCol){
+  const anchor = card.cells[findAnchorCellIndex(card)];
+  return card.cells.map(cell => ({
+    row: cursorRow + cell.row - anchor.row,
+    col: cursorCol + cell.col - anchor.col,
+  }));
+}
+
+/** Valid iff every cell is on the board and open land (not built, not mountain). */
+function isPlacementValid(board, placementCells){
+  return placementCells.every(({row, col}) =>
+    isInsideGrid(row, col) && board[cellIndex(row, col)] === null
+  );
+}
+
+/** Can this card be placed ANYWHERE, in any orientation? */
+function cardFitsSomewhere(board, card){
+  let candidate = card;
+  for(let flip = 0; flip < 2; flip++){
+    for(let rotation = 0; rotation < 4; rotation++){
+      for(let row = 0; row < GRID_SIZE; row++){
+        for(let col = 0; col < GRID_SIZE; col++){
+          if(isPlacementValid(board, getPlacementCells(candidate, row, col))){
+            return true;
+          }
+        }
+      }
+      candidate = rotateCardClockwise(candidate);
+    }
+    candidate = flipCardHorizontally(candidate);
+  }
+  return false;
+}
+
+/* =====================================================================
+ * 4. MOUNTAINS
+ * ===================================================================== */
+
+/**
+ * Scatter MOUNTAIN_COUNT single peaks: each at least two cells from
+ * the board edge (rows/cols 2..8) and no two within touching range
+ * of each other (Chebyshev distance >= 2), so they read as distinct
+ * peaks rather than a range.
+ */
+function generateMountainCells(){
+  for(let attempt = 0; attempt < 200; attempt++){
+    const peaks = [];
+    let guard = 0;
+    while(peaks.length < MOUNTAIN_COUNT && guard++ < 500){
+      const row = 2 + Math.floor(Math.random() * 7);
+      const col = 2 + Math.floor(Math.random() * 7);
+      const clear = peaks.every(([pr, pc]) =>
+        Math.max(Math.abs(pr - row), Math.abs(pc - col)) >= 2);
+      if(clear) peaks.push([row, col]);
+    }
+    if(peaks.length === MOUNTAIN_COUNT) return peaks;
+  }
+  // Deterministic fallback (practically unreachable).
+  return [[2,2],[2,8],[5,5],[8,2],[8,8]];
+}
+
+/* =====================================================================
+ * 5. SCORING — the mayor's instruction library
+ *
+ * Every instruction is { name, desc, score(board) } where score is a
+ * pure function of the board. Mountains count as FILLED for row
+ * completion, but they are never part of any improvement: group
+ * finding, adjacency and type counts all skip them.
+ * ===================================================================== */
+
+/** Flood fill: contiguous same-type improvement groups (mountains excluded). */
+function findTypeGroups(board){
+  const visited = new Array(GRID_SIZE * GRID_SIZE).fill(false);
+  const groups = [];
+  for(let row = 0; row < GRID_SIZE; row++){
+    for(let col = 0; col < GRID_SIZE; col++){
+      const startIndex = cellIndex(row, col);
+      const value = board[startIndex];
+      if(visited[startIndex] || value === null || value === MOUNTAIN) continue;
+
+      const groupCells = [];
+      const stack = [[row, col]];
+      visited[startIndex] = true;
+      while(stack.length){
+        const [r, c] = stack.pop();
+        groupCells.push([r, c]);
+        for(const [dr, dc] of ORTHOGONAL_NEIGHBOURS){
+          const nr = r + dr, nc = c + dc;
+          if(isInsideGrid(nr, nc)
+              && !visited[cellIndex(nr, nc)]
+              && board[cellIndex(nr, nc)] === value){
+            visited[cellIndex(nr, nc)] = true;
+            stack.push([nr, nc]);
+          }
+        }
+      }
+      groups.push({type: value, cells: groupCells});
+    }
+  }
+  return groups;
+}
+
+const chipHtml = typeId =>
+  `<span class="chip" style="background:${TYPE_HEX[typeId]}"></span>${TYPE_NAME[typeId]}`;
+
+/** Count tiles of `typeId` that have at least one neighbour passing `test`. */
+function countTilesWithNeighbour(board, typeId, test){
+  let count = 0;
+  for(let row = 0; row < GRID_SIZE; row++){
+    for(let col = 0; col < GRID_SIZE; col++){
+      if(board[cellIndex(row, col)] !== typeId) continue;
+      const hasIt = ORTHOGONAL_NEIGHBOURS.some(([dr, dc]) => {
+        const nr = row + dr, nc = col + dc;
+        return isInsideGrid(nr, nc) && test(board[cellIndex(nr, nc)]);
+      });
+      if(hasIt) count++;
+    }
+  }
+  return count;
+}
+
+const INSTRUCTION_TEMPLATES = [
+
+  // --- Irrigation: farms next to water ---
+  { deal(){
+      return {
+        name: "Irrigation",
+        desc: `1 point for every edge where a ${chipHtml("farm")} touches a ${chipHtml("lake")}.`,
+        score(board){
+          let points = 0;
+          for(let row = 0; row < GRID_SIZE; row++){
+            for(let col = 0; col < GRID_SIZE; col++){
+              if(board[cellIndex(row, col)] !== "farm") continue;
+              for(const [dr, dc] of ORTHOGONAL_NEIGHBOURS){
+                const nr = row + dr, nc = col + dc;
+                if(isInsideGrid(nr, nc) && board[cellIndex(nr, nc)] === "lake") points++;
+              }
+            }
+          }
+          return points;
+        }
+      };
+  }},
+
+  // --- Belts: a chosen type ringing the block ---
+  { deal(){
+      return {
+        name: "Greenbelt",
+        desc: `1 point per ${chipHtml("forest")} tile on the outer edge of the block.`,
+        score(board){
+          let points = 0;
+          for(let row = 0; row < GRID_SIZE; row++){
+            for(let col = 0; col < GRID_SIZE; col++){
+              const onEdge = row === 0 || row === GRID_SIZE - 1
+                          || col === 0 || col === GRID_SIZE - 1;
+              if(onEdge && board[cellIndex(row, col)] === "forest") points++;
+            }
+          }
+          return points;
+        }
+      };
+  }},
+  { deal(){
+      return {
+        name: "Moat",
+        desc: `1 point per ${chipHtml("lake")} tile on the outer edge of the block.`,
+        score(board){
+          let points = 0;
+          for(let row = 0; row < GRID_SIZE; row++){
+            for(let col = 0; col < GRID_SIZE; col++){
+              const onEdge = row === 0 || row === GRID_SIZE - 1
+                      || col === 0 || col === GRID_SIZE - 1;
+              if(onEdge && board[cellIndex(row, col)] === "lake") points++;
+            }
+          }
+          return points;
+        }
+      };
+    }},
+
+  // --- Downtown: city in the centre ---
+  { deal(){
+      return {
+        name: "Downtown",
+        desc: `2 points per ${chipHtml("city")} tile inside the central 7x7 square.`,
+        score(board){
+          let points = 0;
+          for(let row = 2; row <= 9; row++){
+            for(let col = 2; col <= 9; col++){
+              if(board[cellIndex(row, col)] === "city") points += 2;
+            }
+          }
+          return points;
+        }
+      };
+  }},
+
+  // --- Alpine Resorts: a chosen type hugging the mountains ---
+  { deal(){
+      const targetType = randomItem(TYPES).id;
+      return {
+        name: "Alpine Resorts",
+        desc: `2 points per ${chipHtml(targetType)} tile adjacent to a ▲ mountain.`,
+        score(board){
+          return 2 * countTilesWithNeighbour(board, targetType, v => v === MOUNTAIN);
+        }
+      };
+  }},
+
+  // --- Homesteads: a chosen type kept apart from its own kind ---
+  { deal(){
+      const targetType = randomItem(TYPES).id;
+      return {
+        name: "Homesteads",
+        desc: `12 points per ${chipHtml(targetType)} tile with no ${TYPE_NAME[targetType]} neighbour.`,
+        score(board){
+          return 12 * findTypeGroups(board)
+            .filter(g => g.type === targetType && g.cells.length === 1)
+            .length;
+        }
+      };
+  }},
+
+  // --- Districts: solid 2x2 blocks of one type ---
+  { deal(){
+      return {
+        name: "Districts",
+        desc: `3 points per 2×2 square of a single improvement type.`,
+        score(board){
+          let points = 0;
+          for(let row = 0; row < GRID_SIZE - 1; row++){
+            for(let col = 0; col < GRID_SIZE - 1; col++){
+              const topLeft = board[cellIndex(row, col)];
+              if(topLeft !== null && topLeft !== MOUNTAIN
+                  && board[cellIndex(row, col + 1)] === topLeft
+                  && board[cellIndex(row + 1, col)] === topLeft
+                  && board[cellIndex(row + 1, col + 1)] === topLeft){
+                points += 3;
+              }
+            }
+          }
+          return points;
+        }
+      };
+  }},
+
+  // --- Reservoirs: substantial bodies of water ---
+  { deal(){
+      return {
+        name: "Reservoirs",
+        desc: `2 points per tile in every ${chipHtml("lake")} group of 3 or more tiles.`,
+        score(board){
+          return 2 * findTypeGroups(board)
+            .filter(g => g.type === "lake" && g.cells.length >= 3)
+            .reduce((sum, g) => sum + g.cells.length, 0);
+        }
+      };
+  }},
+
+  // --- Boulevard: completed rows (mountains count as filled) ---
+  { deal(){
+      return {
+        name: "Boulevard",
+        desc: `8 points per completely filled row. ▲ mountains count as filled.`,
+        score(board){
+          let points = 0;
+          for(let row = 0; row < GRID_SIZE; row++){
+            const rowIsFull = Array.from({length: GRID_SIZE},
+              (_, col) => board[cellIndex(row, col)]).every(v => v !== null);
+            if(rowIsFull) points += 8;
+          }
+          return points;
+        }
+      };
+  }},
+
+  // --- Avenue: completed columns (mountains count as filled) ---
+  { deal(){
+      return {
+        name: "Avenue",
+        desc: `8 points per completely filled column. ▲ mountains count as filled.`,
+        score(board){
+          let points = 0;
+          for(let col = 0; col < GRID_SIZE; col++){
+            const colIsFull = Array.from({length: GRID_SIZE},
+                    (_, row) => board[cellIndex(row, col)]).every(v => v !== null);
+            if(colIsFull) points += 8;
+          }
+          return points;
+        }
+      };
+    }},
+
+  // --- Big block of same tile
+  { deal(){
+      const targetType = randomItem(TYPES).id;
+      const names = {"lake":"Great Lake","city":"Metropolis","farm":"Bread Basket","forest":"National Park"}
+      return {
+        name: names[targetType],
+        desc: `2 points per tile in your single largest ${chipHtml(targetType)} group.`,
+        score(board){
+          const bigGroups = findTypeGroups(board).filter(g => g.type === targetType);
+          if(bigGroups.length === 0) return 0;
+          return 2 * Math.max(...bigGroups.map(g => g.cells.length));
+        }
+      };
+    }},
+
+  // --- Diversity Quota: mixed-use rows ---
+  { deal(){
+      return {
+        name: "Diversity Quota",
+        desc: `4 points per row containing at least 3 different improvement types.`,
+        score(board){
+          let points = 0;
+          for(let row = 0; row < GRID_SIZE; row++){
+            const typesInRow = new Set();
+            for(let col = 0; col < GRID_SIZE; col++){
+              const value = board[cellIndex(row, col)];
+              if(value !== null && value !== MOUNTAIN) typesInRow.add(value);
+            }
+            if(typesInRow.size >= 3) points += 4;
+          }
+          return points;
+        }
+      };
+  }},
+];
+
+/* =====================================================================
+ * 6. GAME STATE
+ *
+ * Everything here is plain JSON data (instruction score functions
+ * live in seasonPlans, which is rebuilt each game and never mutated
+ * mid-game), so undo snapshots are simple deep clones.
+ * ===================================================================== */
+
+let board;            // 121 slots: null | "mountain" | type id
+let deck;             // the year's 20 improvement cards (never mutated)
+let turnIndex;        // how many builds have been placed (0..20)
+let currentCard;      // the card in hand (a clone, so rotation is safe)
+let grantPending;     // true when the dealt card fits nowhere
+let seasonPlans;      // [ [instr, instr], x4 ] — dealt at game start
+let bankedSeasons;    // [{lines:[{name,pts}], subtotal}] in season order
+let undoHistory;
+let tilesPlacedCount;
+let isGameOver;
+
+let previewPlacement = null;
+let lastTappedCellKey = null;
+
+const isTouchDevice = window.matchMedia("(pointer: coarse)").matches;
+
+/** Which season is currently being played? Returns 4 after winter. */
+function currentSeasonIndex(){
+  for(let s = 0; s < SEASONS.length; s++){
+    if(turnIndex < SEASON_END[s]) return s;
+  }
+  return SEASONS.length;
+}
+
+/** 1-based build number within the current season. */
+function turnWithinSeason(){
+  const s = currentSeasonIndex();
+  const seasonStart = s === 0 ? 0 : SEASON_END[s - 1];
+  return turnIndex - seasonStart + 1;
+}
+
+/** Reset everything and start a fresh year. */
+function newGame(){
+  board = new Array(GRID_SIZE * GRID_SIZE).fill(null);
+  for(const [row, col] of generateMountainCells()){
+    board[cellIndex(row, col)] = MOUNTAIN;
+  }
+
+  deck = createDeck();
+
+  // Deal 8 distinct instruction templates, two per season, letting
+  // each lock in its random parameters for the year.
+  const dealt = shuffledCopy(INSTRUCTION_TEMPLATES).slice(0, 8).map(t => t.deal());
+  seasonPlans = [dealt.slice(0,2), dealt.slice(2,4), dealt.slice(4,6), dealt.slice(6,8)];
+
+  turnIndex = 0;
+  bankedSeasons = [];
+  undoHistory = [];
+  tilesPlacedCount = 0;
+  isGameOver = false;
+  previewPlacement = null;
+  lastTappedCellKey = null;
+
+  startTurn();
+  document.getElementById("overlay").classList.add("hidden");
+  renderAll();
+}
+
+/**
+ * Deal the next card from the deck. If it fits nowhere in any
+ * orientation, the council instead grants a 1×1 of the player's
+ * choice — grantPending puts the UI into type-picker mode.
+ */
+function startTurn(){
+  currentCard = deepClone(deck[turnIndex]);
+  grantPending = !cardFitsSomewhere(board, currentCard);
+  if(grantPending) currentCard = null;
+}
+
+/** The player picked the type for their council grant. */
+function chooseGrantType(typeId){
+  if(!grantPending || isGameOver) return;
+  currentCard = createGrantCard(typeId);
+  grantPending = false;
+  renderAll();
+}
+
+function saveUndoSnapshot(){
+  undoHistory.push(deepClone({
+    board, turnIndex, currentCard, grantPending, tilesPlacedCount, bankedSeasons
+  }));
+}
+
+function undoLastPlacement(){
+  if(undoHistory.length === 0 || isGameOver) return;
+  ({board, turnIndex, currentCard, grantPending,
+    tilesPlacedCount, bankedSeasons} = undoHistory.pop());
+  previewPlacement = null;
+  lastTappedCellKey = null;
+  renderAll();
+}
+
+/** Score a season's two instructions on the current board and freeze it. */
+function bankSeason(seasonIdx){
+  const lines = seasonPlans[seasonIdx].map(instr =>
+    ({name: instr.name, pts: instr.score(board)}));
+  bankedSeasons.push({
+    lines,
+    subtotal: lines.reduce((sum, l) => sum + l.pts, 0),
+  });
+}
+
+/** Commit a placement, bank the season if it just ended, deal the next card. */
+function placeCurrentCard(placementCells){
+  saveUndoSnapshot();
+
+  for(const {row, col} of placementCells){
+    board[cellIndex(row, col)] = currentCard.type;
+  }
+  tilesPlacedCount += placementCells.length;
+  turnIndex++;
+
+  previewPlacement = null;
+  lastTappedCellKey = null;
+
+  // Did that placement close out a season?
+  const seasonJustEnded = SEASON_END.indexOf(turnIndex);
+  if(seasonJustEnded !== -1) bankSeason(seasonJustEnded);
+
+  if(turnIndex >= TOTAL_TURNS){
+    finishGame();
+  } else {
+    startTurn();
+  }
+  renderAll();
+}
+
+/** Show the annual review. */
+function finishGame(){
+  isGameOver = true;
+  currentCard = null;
+
+  document.getElementById("overLines").innerHTML = bankedSeasons.map((banked, s) =>
+    `<div class="season-block">
+      <div class="season-title"><span>${SEASONS[s].name}</span><span class="pts">${banked.subtotal}</span></div>
+      ${banked.lines.map(l =>
+        `<div class="line"><span>${l.name}</span><span class="pts">${l.pts}</span></div>`).join("")}
+    </div>`
+  ).join("");
+
+  const grandTotal = bankedSeasons.reduce((sum, b) => sum + b.subtotal, 0);
+  document.getElementById("overSub").textContent =
+    `${tilesPlacedCount} parcels zoned across the year`;
+  document.getElementById("overTotal").textContent = grandTotal;
+  document.getElementById("overlay").classList.remove("hidden");
+}
+
+/* =====================================================================
+ * 7. RENDERING & UI
+ * ===================================================================== */
+
+const boardElement = document.getElementById("board");
+
+function buildBoardElements(){
+  boardElement.innerHTML = "";
+  for(let row = 0; row < GRID_SIZE; row++){
+    for(let col = 0; col < GRID_SIZE; col++){
+      const cellDiv = document.createElement("div");
+      cellDiv.className = "cell";
+      cellDiv.addEventListener("pointerenter", () => {
+        if(!isTouchDevice) showHoverPreview(row, col);
+      });
+      cellDiv.addEventListener("click", () => handleCellTap(row, col));
+      boardElement.appendChild(cellDiv);
+    }
+  }
+  boardElement.addEventListener("pointerleave", () => {
+    if(!isTouchDevice){
+      previewPlacement = null;
+      renderBoard();
+      renderPlan();
+    }
+  });
+}
+
+function showHoverPreview(row, col){
+  previewPlacement = (isGameOver || !currentCard)
+    ? null : getPlacementCells(currentCard, row, col);
+  renderBoard();
+  renderPlan(); // live "+n" against the current season's instructions
+}
+
+function handleCellTap(row, col){
+  if(isGameOver || !currentCard) return;
+
+  const placementCells = getPlacementCells(currentCard, row, col);
+  const valid = isPlacementValid(board, placementCells);
+
+  if(isTouchDevice){
+    const tapKey = row + "," + col;
+    if(lastTappedCellKey !== tapKey){
+      lastTappedCellKey = tapKey;
+      previewPlacement = placementCells;
+      renderBoard();
+      renderPlan();
+      return;
+    }
+  }
+
+  if(valid) placeCurrentCard(placementCells);
+}
+
+function renderBoard(){
+  const cellDivs = boardElement.children;
+
+  // Pass 1: committed land.
+  for(let row = 0; row < GRID_SIZE; row++){
+    for(let col = 0; col < GRID_SIZE; col++){
+      const cellDiv = cellDivs[cellIndex(row, col)];
+      const value = board[cellIndex(row, col)];
+      if(value === MOUNTAIN){
+        cellDiv.className = "cell mountain";
+        cellDiv.style.background = "";
+        cellDiv.textContent = "▲";
+      } else {
+        cellDiv.className = "cell" + (value ? " filled" : "");
+        cellDiv.style.background = value ? TYPE_HEX[value] : "";
+        cellDiv.textContent = "";
+      }
+    }
+  }
+
+  // Pass 2: ghost preview of the card being placed.
+  if(previewPlacement && currentCard){
+    const valid = isPlacementValid(board, previewPlacement);
+    for(const {row, col} of previewPlacement){
+      if(!isInsideGrid(row, col)) continue;
+      const cellDiv = cellDivs[cellIndex(row, col)];
+      if(valid){
+        cellDiv.classList.add("ghost");
+        cellDiv.style.background = TYPE_HEX[currentCard.type];
+      } else if(board[cellIndex(row, col)] === null){
+        cellDiv.classList.add("ghost-bad");
+      }
+    }
+  }
+}
+
+/**
+ * The mayor's plan panel: all four seasons at once.
+ *   past    — banked scores, stamped
+ *   current — live scores with "+n" deltas for the hovered placement
+ *   future  — instructions visible, no scores yet
+ */
+function renderPlan(){
+  const csi = currentSeasonIndex();
+
+  let hypotheticalBoard = null;
+  if(previewPlacement && currentCard && isPlacementValid(board, previewPlacement)){
+    hypotheticalBoard = board.slice();
+    for(const {row, col} of previewPlacement){
+      hypotheticalBoard[cellIndex(row, col)] = currentCard.type;
+    }
+  }
+
+  let liveCurrentSeasonTotal = 0;
+  let hypotheticalDelta = 0;
+
+  document.getElementById("plan").innerHTML = SEASONS.map((season, s) => {
+    const isBanked = s < bankedSeasons.length;
+    const isCurrent = !isGameOver && s === csi;
+    const cls = isBanked ? "past" : (isCurrent ? "current" : "future");
+
+    const headRight = isBanked
+      ? `<span class="stamp">✓ banked ${bankedSeasons[s].subtotal}</span>`
+      : (isCurrent
+          ? `build ${turnWithinSeason()} of ${season.turns}`
+          : `${season.turns} builds`);
+
+    const instrHtml = seasonPlans[s].map((instr, i) => {
+      let ptsHtml;
+      if(isBanked){
+        ptsHtml = `<span class="ipts banked">${bankedSeasons[s].lines[i].pts}</span>`;
+      } else if(isCurrent){
+        const currentPoints = instr.score(board);
+        liveCurrentSeasonTotal += currentPoints;
+        let deltaHtml = "";
+        if(hypotheticalBoard){
+          const hypotheticalPoints = instr.score(hypotheticalBoard);
+          if(hypotheticalPoints > currentPoints){
+            hypotheticalDelta += hypotheticalPoints - currentPoints;
+            deltaHtml = `<span class="delta">+${hypotheticalPoints - currentPoints}</span>`;
+          }
+        }
+        ptsHtml = `<span class="ipts">${currentPoints}${deltaHtml}</span>`;
+      } else {
+        ptsHtml = `<span class="ipts" style="color:var(--muted)">—</span>`;
+      }
+      return `<div class="instr">
+        <div><div class="iname">${instr.name}</div><div class="idesc">${instr.desc}</div></div>
+        ${ptsHtml}
+      </div>`;
+    }).join("");
+
+    return `<div class="season ${cls}">
+      <div class="season-head"><span>${season.name}</span><span>${headRight}</span></div>
+      ${instrHtml}
+    </div>`;
+  }).join("");
+
+  // Total = banked points + the current season's live score.
+  const bankedTotal = bankedSeasons.reduce((sum, b) => sum + b.subtotal, 0);
+  const totalDeltaHtml = hypotheticalDelta > 0
+    ? `<span class="delta">+${hypotheticalDelta}</span>` : "";
+  document.getElementById("total").innerHTML =
+    (bankedTotal + liveCurrentSeasonTotal) + totalDeltaHtml;
+}
+
+/** The "This turn's build" panel: the current card, or the grant picker. */
+function renderBuild(){
+  const buildElement = document.getElementById("build");
+  const turnlineElement = document.getElementById("turnline");
+
+  if(isGameOver){
+    buildElement.innerHTML =
+      `<div class="grant-msg">The year is over. The mayor is reviewing your work…</div>`;
+    turnlineElement.textContent = "";
+    document.getElementById("undoBtn").disabled = true;
+    return;
+  }
+
+  if(grantPending){
+    buildElement.innerHTML =
+      `<div class="grant-msg">The <b>${deck[turnIndex].name}</b> doesn't fit anywhere
+        on the block. The council grants you a <b>1×1 improvement of your choice</b> instead:</div>
+       <div class="grant-btns">${TYPES.map(t =>
+         `<button data-grant="${t.id}"><span class="chip" style="background:${t.hex}"></span>${t.name}</button>`
+       ).join("")}</div>`;
+    buildElement.querySelectorAll("[data-grant]").forEach(btn =>
+      btn.addEventListener("click", () => chooseGrantType(btn.dataset.grant)));
+  } else {
+    // Mini preview of the card, sized to its bounding box.
+    const height = Math.max(...currentCard.cells.map(c => c.row)) + 1;
+    const width  = Math.max(...currentCard.cells.map(c => c.col)) + 1;
+    const cellPixels = Math.floor(72 / Math.max(height, width));
+    const occupied = new Set(currentCard.cells.map(c => c.row + "," + c.col));
+
+    let miniCells = "";
+    for(let row = 0; row < height; row++){
+      for(let col = 0; col < width; col++){
+        const filled = occupied.has(row + "," + col);
+        miniCells += `<div style="${filled ? `background:${TYPE_HEX[currentCard.type]}` : ""}"></div>`;
+      }
+    }
+
+    buildElement.innerHTML =
+      `<div class="build-row">
+        <div class="build-shape">
+          <div class="mini" style="grid-template-rows:repeat(${height},${cellPixels}px);
+                                   grid-template-columns:repeat(${width},${cellPixels}px)">
+            ${miniCells}
+          </div>
+        </div>
+        <div class="build-info">
+          <div class="build-name">${currentCard.name}</div>
+          <div class="build-type">${chipHtml(currentCard.type)} · ${currentCard.cells.length} tile${currentCard.cells.length > 1 ? "s" : ""}</div>
+          <div class="controls">
+            <button id="rotBtn" ${currentCard.cells.length < 2 ? "disabled" : ""}>Rotate (R)</button>
+            <button id="flipBtn" ${currentCard.cells.length < 2 ? "disabled" : ""}>Flip (F)</button>
+          </div>
+        </div>
+      </div>`;
+    document.getElementById("rotBtn").addEventListener("click",
+      () => transformCurrentCard(rotateCardClockwise));
+    document.getElementById("flipBtn").addEventListener("click",
+      () => transformCurrentCard(flipCardHorizontally));
+  }
+
+  const s = currentSeasonIndex();
+  turnlineElement.textContent =
+    `${SEASONS[s].name} · build ${turnWithinSeason()} of ${SEASONS[s].turns}`
+    + ` · ${TOTAL_TURNS - turnIndex} builds left in the year`;
+
+  document.getElementById("undoBtn").disabled = undoHistory.length === 0;
+}
+
+function transformCurrentCard(transform){
+  if(isGameOver || !currentCard || grantPending || currentCard.cells.length < 2) return;
+  currentCard = transform(currentCard);
+  previewPlacement = null;
+  lastTappedCellKey = null;
+  renderAll();
+}
+
+function renderAll(){
+  renderBoard();
+  renderPlan();
+  renderBuild();
+}
+
+/* ----------------------------- wiring ----------------------------- */
+
+buildBoardElements();
+
+document.getElementById("undoBtn").addEventListener("click", undoLastPlacement);
+document.getElementById("newBtn").addEventListener("click", newGame);
+document.getElementById("againBtn").addEventListener("click", newGame);
+
+document.addEventListener("keydown", event => {
+  if(event.key === "r" || event.key === "R") transformCurrentCard(rotateCardClockwise);
+  if(event.key === "f" || event.key === "F") transformCurrentCard(flipCardHorizontally);
+});
+
+newGame();
+</script>
+</body>
+</html>
