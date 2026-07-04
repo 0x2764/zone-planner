@@ -25,7 +25,7 @@ The game lasts one year of exactly **20 turns**, divided into four seasons of di
 
 At the start of the year, the mayor issues a plan: **two scoring instructions for each season**, eight in total. The entire plan is visible from the first turn, so you can lay groundwork in spring for an instruction that won't be scored until winter.
 
-Some instructions are fixed (Irrigation always cares about farms touching lakes); others pick their target when the plan is issued (Greenbelt might want forests on the edge this year, cities the next). No instruction appears twice in the same year.
+Some instructions are fixed (Irrigation always cares about farms touching lakes, Greenbelt always about forests on the edge); others pick their target when the plan is issued (Alpine Resorts might reward forests hugging the mountains one year, cities the next). No instruction appears twice in the same year.
 
 ## Playing a turn
 
@@ -45,19 +45,21 @@ Your final score is the sum of the four banked season totals. The year always ru
 
 ## The instruction library
 
-Eight of these ten are dealt each year. A ⟨type⟩ marks an instruction that picks its target improvement when the plan is issued.
+Eight of these twelve are dealt each year. A ⟨type⟩ marks an instruction that picks its target improvement when the plan is issued.
 
 | Instruction | Scoring |
 |---|---|
 | **Irrigation** | 1 point for every edge where a farm tile touches a lake tile. |
-| **Greenbelt** | 1 point per ⟨type⟩ tile on the outer edge of the block. |
-| **Downtown** | 2 points per city tile inside the central 5×5 square. |
-| **National Park** | 2 points per tile in your single largest forest group. |
+| **Greenbelt** | 1 point per forest tile on the outer edge of the block. |
+| **Moat** | 1 point per lake tile on the outer edge of the block. |
+| **Downtown** | 2 points per city tile inside the central 7×7 square. |
 | **Alpine Resorts** | 2 points per ⟨type⟩ tile adjacent to a ▲ mountain. |
-| **Homesteads** | 2 points per ⟨type⟩ tile with no neighbour of its own type. |
+| **Homesteads** | 12 points per ⟨type⟩ tile with no neighbour of its own type. |
 | **Districts** | 3 points per 2×2 square of a single improvement type (overlapping squares each count). |
 | **Reservoirs** | 2 points per tile in every lake group of 3 or more tiles. |
-| **Boulevard** | 4 points per completely filled row. Mountains count as filled. |
+| **Boulevard** | 8 points per completely filled row. Mountains count as filled. |
+| **Avenue** | 8 points per completely filled column. Mountains count as filled. |
+| **Great Lake / Metropolis / Bread Basket / National Park** ⟨type⟩ | 2 points per tile in your single largest ⟨type⟩ group. The card is named for its type: Great Lake (lake), Metropolis (city), Bread Basket (farm), National Park (forest). |
 | **Diversity Quota** | 4 points per row containing at least 3 different improvement types. |
 
 A **group** is a set of same-type tiles connected edge-to-edge (diagonals don't connect). **Adjacent** always means sharing an edge, never just a corner.
