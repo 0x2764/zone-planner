@@ -1,0 +1,10 @@
+{
+  "name": "zone-planner",
+  "version": "1.0.0",
+  "description": "A council land-use polyomino solitaire — an HTML5 game with no dependencies.",
+  "license": "MIT",
+  "scripts": {
+    "build": "node build.js",
+    "test": "node build.js --test"
+  }
+}

@@ -1,0 +1,58 @@
+name: Build and test
+
+# Runs on every push and pull request. The build is dependency-free, so there
+# is no install step — just Node and one command. Pushes to main are also
+# published to GitHub Pages.
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+# Let a newer Pages deploy supersede an in-flight one, without cancelling a
+# run partway through a deploy.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      # Builds dist/ and runs the test suite headlessly. Non-zero on failure.
+      - name: Build and run tests
+        run: node build.js --test
+
+  deploy:
+    # Only publish from main, and only once the tests are green.
+    needs: build-test
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Build
+        run: node build.js
+      # Serve the game at the site root; the test page stays at
+      # /zone-planner.tests.html.
+      - name: Make the game the site index
+        run: cp dist/zone-planner.html dist/index.html
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -47,9 +47,13 @@
   <div class="sub">open in a browser · results below · &lt;title&gt; shows PASS/FAIL</div>
   <div id="results">Running…</div>
 
-  <!-- Load the game logic. With no #board on this page, it exposes its
-       functions as globals but does not boot the game. -->
-  <script src="zone-planner.js"></script>
-  <script src="zone-planner.tests.js"></script>
+  <!-- Built from src/. The game logic has no #board here, so it exposes its
+       functions without booting the game; the tests then exercise them. -->
+  <script>
+{{GAME_JS}}
+  </script>
+  <script>
+{{TESTS_JS}}
+  </script>
 </body>
 </html>
