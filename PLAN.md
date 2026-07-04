@@ -5,8 +5,8 @@
 3. ~~Specific improvement builds can only appear once per deck~~
 4. ~~Create a more maintainable directory structure, and make it easy to add instructions and improvements~~
 5. ~~Adjust homesteads to be shape not tile, and 8 points~~
-6. Change city colour to #5E1914
-6. Design a mobile version, with the grid anchored to the bottom, instructions and improvements small (but zoomable!), and drawing the polyominoes with your finger instead of tapping rotate/flip
+6. ~~Change city colour to #8E1914~~
+7. Design a mobile version, with the grid anchored to the bottom, instructions and improvements small (but zoomable!), and drawing the polyominoes with your finger instead of tapping rotate/flip
 
 ### Future Projects
 

@@ -32,7 +32,7 @@ const TYPES = [
                I4:"Shelter Belt",   O4:"Old Growth Stand",T4:"Ranger Junction",S4:"Wild Thicket",
                L4:"Timber Reserve", P5:"Deep Woods",     L5:"Ridge Forest",   T5:"Fern Gully"} },
 
-  { id:"city", name:"City", hex:"#8A8FA3", groupName:"Metropolis",     /* slate ink */
+  { id:"city", name:"City", hex:"#8E1914", groupName:"Metropolis",     /* brick red */
     shapeWeights:{M1:.15,D2:.2,  I3:.4, L3:.2, I4:.1,  O4:1,   T4:1,  S4:.2, L4:1,  P5:1,  L5:.1, T5:.4},
     cardNames:{M1:"Corner Store",  D2:"Row Houses",     I3:"Main Street",    L3:"Bus Depot",
                I4:"High Street",    O4:"Town Square",    T4:"Civic Centre",   S4:"Terrace Blocks",
