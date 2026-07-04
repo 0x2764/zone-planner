@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Zone Planner Tests</title>
+<style>
+  :root{
+    --bg:#E9E0CA; --panel:#F2EBD9; --line:#C3B28D; --text:#3A2E20; --muted:#8B7A5C;
+    --ok:#3E7A4E; --fail:#A8482C;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    background:var(--bg);color:var(--text);
+    font-family:system-ui,sans-serif;padding:28px 20px 60px;
+    display:flex;flex-direction:column;align-items:center;
+  }
+  h1{font-size:1.2rem;letter-spacing:.12em;text-transform:uppercase;margin-bottom:4px}
+  .sub{font-family:"IBM Plex Mono",monospace;font-size:.72rem;color:var(--muted);margin-bottom:20px}
+  #results{width:100%;max-width:720px}
+  .banner{
+    font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:1rem;
+    color:#fff;border-radius:8px;padding:12px 16px;margin-bottom:16px;letter-spacing:.04em;
+  }
+  .banner.ok{background:var(--ok)}
+  .banner.fail{background:var(--fail)}
+  .list{list-style:none}
+  .list li{
+    display:grid;grid-template-columns:auto 1fr;gap:8px;align-items:baseline;
+    padding:7px 12px;border:1px solid var(--line);border-top:none;background:var(--panel);
+    font-size:.9rem;
+  }
+  .list li:first-child{border-top:1px solid var(--line);border-radius:8px 8px 0 0}
+  .list li:last-child{border-radius:0 0 8px 8px}
+  .list .mark{font-weight:700}
+  .list li.ok .mark{color:var(--ok)}
+  .list li.fail{background:#F3E0D8}
+  .list li.fail .mark{color:var(--fail)}
+  .list .msg{
+    grid-column:2;font-family:"IBM Plex Mono",monospace;font-size:.78rem;
+    color:var(--fail);margin-top:4px;white-space:pre-wrap;
+  }
+</style>
+</head>
+<body>
+  <h1>Zone Planner — test suite</h1>
+  <div class="sub">open in a browser · results below · &lt;title&gt; shows PASS/FAIL</div>
+  <div id="results">Running…</div>
+
+  <!-- Load the game logic. With no #board on this page, it exposes its
+       functions as globals but does not boot the game. -->
+  <script src="zone-planner.js"></script>
+  <script src="zone-planner.tests.js"></script>
+</body>
+</html>
