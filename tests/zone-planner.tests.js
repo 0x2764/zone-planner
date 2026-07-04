@@ -379,13 +379,13 @@ test("Alpine Resorts scores 2 per target tile adjacent to a mountain", () => {
   assertEqual(instruction.score(board), 4);
 });
 
-test("Homesteads scores 12 per isolated target tile", () => {
+test("Homesteads scores 8 per target shape, whatever its size", () => {
   const instruction = dealByName("Homesteads", 0); // target = farm
   const board = emptyBoard();
-  set(board, 0, 0, "farm");                            // isolated
-  set(board, 10, 10, "farm");                          // isolated
-  set(board, 3, 3, "farm"); set(board, 3, 4, "farm");  // a touching pair — excluded
-  assertEqual(instruction.score(board), 24);
+  set(board, 0, 0, "farm");                            // one-tile shape
+  set(board, 10, 10, "farm");                          // one-tile shape
+  set(board, 3, 3, "farm"); set(board, 3, 4, "farm");  // a touching pair — one shape
+  assertEqual(instruction.score(board), 24);           // 3 shapes × 8
 });
 
 test("Largest-group instruction scores 2 per tile in the biggest target group", () => {

@@ -54,7 +54,7 @@ Eight of these twelve are dealt each year. A ⟨type⟩ marks an instruction tha
 | **Moat** | 1 point per lake tile on the outer edge of the block. |
 | **Downtown** | 2 points per city tile inside the central 7×7 square. |
 | **Alpine Resorts** | 2 points per ⟨type⟩ tile adjacent to a ▲ mountain. |
-| **Homesteads** | 12 points per ⟨type⟩ tile with no neighbour of its own type. |
+| **Homesteads** | 8 points per ⟨type⟩ shape (connected group) with no neighbour of its own type. |
 | **Districts** | 3 points per 2×2 square of a single improvement type (overlapping squares each count). |
 | **Reservoirs** | 2 points per tile in every lake group of 3 or more tiles. |
 | **Boulevard** | 8 points per completely filled row. Mountains count as filled. |
