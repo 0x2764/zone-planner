@@ -39,7 +39,7 @@ You may **rotate** and **flip** the card freely, then place it anywhere on the b
 
 At the end of each season — immediately after its final build — the block is scored against that season's two instructions, and the points are **banked**. Banked points are frozen forever: nothing you build later can raise or lower a past season's score.
 
-During a season, only its own two instructions are live. The current scores are shown as you play, and while you're deciding where to place a card, a preview shows exactly how many points that placement would add. Instructions for future seasons show no score yet, but they still matter — the board you hand each season is the board you built all year.
+During a season, only its own two instructions are live. The current scores are shown as you play, and while you're deciding where to place a card, a preview shows exactly how many points that placement would add. Future seasons show a live *projected* score — what their instructions would earn on the board so far — which updates each time you build but isn't banked until that season ends. Those projections matter: the board you hand each season is the board you built all year.
 
 Your final score is the sum of the four banked season totals. The year always runs its full 20 turns; the annual review then breaks down your score season by season.
 

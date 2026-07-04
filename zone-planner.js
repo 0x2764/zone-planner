@@ -766,7 +766,7 @@ function renderBoard(){
  * The mayor's plan panel: all four seasons at once.
  *   past    — banked scores, stamped
  *   current — live scores with "+n" deltas for the hovered placement
- *   future  — instructions visible, no scores yet
+ *   future  — instructions visible with live projected scores (no hover delta)
  */
 function renderPlan(){
   const csi = currentSeasonIndex();
@@ -810,7 +810,9 @@ function renderPlan(){
         }
         ptsHtml = `<span class="ipts">${currentPoints}${deltaHtml}</span>`;
       } else {
-        ptsHtml = `<span class="ipts" style="color:var(--muted)">—</span>`;
+        // Future season: live projected score on the committed board. No
+        // hover delta — it only moves when a tile actually lands.
+        ptsHtml = `<span class="ipts" style="color:var(--muted)">${instr.score(board)}</span>`;
       }
       return `<div class="instr">
         <div><div class="iname">${instr.name}</div><div class="idesc">${instr.desc}</div></div>
