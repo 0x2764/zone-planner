@@ -203,6 +203,14 @@ test("createDeck deals 20 well-formed cards", () => {
   }
 });
 
+test("createDeck never deals the same card twice", () => {
+  for(let iteration = 0; iteration < 100; iteration++){
+    const deck = createDeck();
+    const keys = deck.map(card => card.type + ":" + sig(card.cells));
+    assertEqual(new Set(keys).size, deck.length, "all 20 cards distinct");
+  }
+});
+
 test("createGrantCard is a 1×1 of the requested type", () => {
   const grant = createGrantCard("lake");
   assertEqual(grant.type, "lake");

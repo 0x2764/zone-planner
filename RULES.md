@@ -29,7 +29,7 @@ Some instructions are fixed (Irrigation always cares about farms touching lakes,
 
 ## Playing a turn
 
-Each turn, the council deals you one **improvement card** from a face-down 20-card deck — you never know what's coming next. A card is a polyomino of 1 to 5 tiles, all of a single improvement type, with a name describing what's being built (a farm I-piece might be a *Grain Silo Row*; a lake 2×2, a *Mill Pond*). Each type leans toward characteristic silhouettes — farms toward strips, lakes toward blobs, forests toward irregular clumps, cities toward compact blocks — but nothing is guaranteed.
+Each turn, the council deals you one **improvement card** from their inventory — you never know what's coming next. A card is a polyomino of 1 to 5 tiles, all of a single improvement type, with a name describing what's being built (a farm I-piece might be a *Grain Silo Row*; a lake 2×2, a *Mill Pond*). Each type leans toward characteristic silhouettes — farms toward strips, lakes toward blobs, forests toward irregular clumps, cities toward compact blocks — but nothing is guaranteed.
 
 You may **rotate** and **flip** the card freely, then place it anywhere on the block where every tile lands on open land. Placements can never overlap existing improvements or mountains, and once built, an improvement is permanent. You must place the card — there is no skipping or discarding.
 
@@ -39,7 +39,7 @@ You may **rotate** and **flip** the card freely, then place it anywhere on the b
 
 At the end of each season — immediately after its final build — the block is scored against that season's two instructions, and the points are **banked**. Banked points are frozen forever: nothing you build later can raise or lower a past season's score.
 
-During a season, only its own two instructions are live. The current scores are shown as you play, and while you're deciding where to place a card, a preview shows exactly how many points that placement would add. Future seasons show a live *projected* score — what their instructions would earn on the board so far — which updates each time you build but isn't banked until that season ends. Those projections matter: the board you hand each season is the board you built all year.
+During a season, only its own two instructions are live. The current scores are shown as you play, and while you're deciding where to place a card, a preview shows exactly how many points that placement would add to the current season. Future seasons show a live *projected* score — what their instructions would earn on the board so far — which updates each time you build but isn't banked until that season ends. Those projections matter: the board you hand each season is the board you built all year.
 
 Your final score is the sum of the four banked season totals. The year always runs its full 20 turns; the annual review then breaks down your score season by season.
 

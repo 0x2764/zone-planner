@@ -134,17 +134,24 @@ function randomShapeForType(typeId){
  * 3. CARDS — creating, transforming and placing improvement cards
  * ===================================================================== */
 
-/** Build the year's 20-card deck. Types are uniform; shapes lean per type. */
+/** Build the year's 20-card deck. Types are uniform; shapes lean per type.
+ *  No card (type+shape combination) appears more than once in a deck. */
 function createDeck(){
-  return Array.from({length: TOTAL_TURNS}, () => {
+  const deck = [];
+  const seen = new Set();
+  while(deck.length < TOTAL_TURNS){
     const type = randomItem(TYPES).id;
     const shape = randomShapeForType(type);
-    return {
+    const key = type + ":" + shape;
+    if(seen.has(key)) continue;      // already dealt this card — redraw
+    seen.add(key);
+    deck.push({
       type,
       name: CARD_NAMES[type][shape],
       cells: SHAPES[shape].map(([row, col]) => ({row, col})),
-    };
-  });
+    });
+  }
+  return deck;
 }
 
 /** The 1×1 the council grants when the dealt card fits nowhere. */
