@@ -11,11 +11,11 @@ Play it online — every push to `main` is published to **GitHub Pages** (see th
 The game is written as small, focused source fragments under `src/` and compiled into the self-contained `dist/` files by a zero-dependency Node script:
 
 ```
-node build.js          # build dist/zone-planner.html + dist/zone-planner.tests.html
+node build.js          # build dist/zone-planner.html, dist/zone-planner.mobile.html + dist/zone-planner.tests.html
 node build.js --test    # build, then run the test suite headlessly (non-zero exit on failure)
 ```
 
 - **Add a scoring instruction** — drop a file in `src/instructions/` that calls `registerInstruction({ deal() { … } })`. The build globs it in automatically.
 - **Add an improvement type** — add one entry to the `TYPES` array in `src/game/types.js`; every derived table and consumer follows.
 
-`src/game/*` are plain-script fragments sharing one global scope (no import/export); `build.js` concatenates them in dependency order and inlines the result plus `src/styles.css` into the shippable HTML. `dist/` is generated and git-ignored — run `node build.js` to produce it locally; CI builds it fresh and deploys it to GitHub Pages.
+The source is split **shared / desktop / mobile**: `src/game/*` holds the layout-agnostic core (game logic, `state.js`, and the shared theme in `src/game/styles.css`), while `src/desktop/*` and `src/mobile/*` each add a UI layer — `render.js`, `boot.js`, `template.html`, and a layout-only `styles.css`. All are plain-script fragments sharing one global scope (no import/export); `build.js` concatenates the shared core with each shell's UI (and each template's shared + shell CSS) into self-contained HTML: `dist/zone-planner.html` (desktop) and `dist/zone-planner.mobile.html` (mobile). The **mobile build** anchors the board to the bottom of the screen and places by finger — tap open land to trace where the current shape can fit, tap again to narrow, and tap the shape to build — instead of the desktop's rotate/flip. Small touch screens loading the desktop file are auto-redirected to it (opt out with `?desktop`). `dist/` is generated and git-ignored — run `node build.js` to produce it locally; CI builds it fresh and deploys it to GitHub Pages.

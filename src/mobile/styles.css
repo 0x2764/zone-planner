@@ -1,0 +1,324 @@
+/* =====================================================================
+ * MOBILE LAYOUT — arrangement only. Theme, cell appearance, chip and the
+ * year-end modal come from the shared src/game/styles.css, concatenated
+ * ahead of this sheet at build time.
+ *
+ * The board is anchored to the bottom of the viewport for thumb reach;
+ * the compact plan + build panels stack above it in a scroll region. The
+ * selection classes (.zone / .constraint / .ready / .clear-armed) paint
+ * the touch-native placement preview.
+ * ===================================================================== */
+
+body {
+    height: 100dvh;
+    padding: 10px 10px 0;
+    gap: 8px;
+    overflow: hidden;               /* the .scroll region scrolls, not the page */
+    overscroll-behavior: none;
+}
+
+header {
+    width: 100%;
+    max-width: 520px;
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    flex: 0 0 auto;
+}
+
+header h1 {
+    font-size: 1.15rem;
+    letter-spacing: .1em
+}
+
+header a {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: .7rem;
+    letter-spacing: .04em
+}
+
+/* ---------- the scrollable panel stack ---------- */
+.scroll {
+    width: 100%;
+    max-width: 520px;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-bottom: 4px;
+}
+
+.scroll .panel {
+    padding: 10px 12px
+}
+
+.panel h2 {
+    margin-bottom: 7px
+}
+
+/* ---------- plan header + total ---------- */
+.plan-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 6px;
+}
+
+.plan-head h2 {
+    margin-bottom: 0
+}
+
+.total {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    font-family: "IBM Plex Mono", monospace;
+}
+
+.total .label {
+    font-size: .6rem;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+
+.total .value {
+    font-size: 1.3rem;
+    font-weight: 600;
+    color: var(--gold);
+    line-height: 1;
+}
+
+.total .value .delta {
+    color: var(--banked);
+    font-size: .8rem;
+    margin-left: 4px;
+}
+
+/* ---------- the mayor's plan (compact four-season ledger) ---------- */
+.season {
+    border: 1px solid var(--line);
+    border-radius: 7px;
+    padding: 6px 9px;
+    margin-bottom: 6px;
+    background: var(--panel-2);
+}
+
+.season:last-child {
+    margin-bottom: 0
+}
+
+.season.future {
+    opacity: .6
+}
+
+.season.current {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 1px var(--gold)
+}
+
+.season-head {
+    display: flex;
+    justify-content: space-between;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: .62rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 4px;
+}
+
+.season.current .season-head {
+    color: var(--gold)
+}
+
+.season-head .stamp {
+    color: var(--banked)
+}
+
+.instr {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    align-items: baseline;
+    padding: 3px 0;
+}
+
+.instr + .instr {
+    border-top: 1px dashed var(--line)
+}
+
+.instr .iname {
+    font-weight: 700;
+    font-size: .78rem
+}
+
+.instr .idesc {
+    font-size: .72rem;
+    color: var(--muted);
+    line-height: 1.35;
+    margin-top: 1px;
+}
+
+.instr .ipts {
+    font-family: "IBM Plex Mono", monospace;
+    font-weight: 600;
+    font-size: .82rem;
+    color: var(--gold);
+    white-space: nowrap;
+}
+
+.instr .ipts.banked {
+    color: var(--banked)
+}
+
+.instr .delta {
+    color: var(--banked);
+    font-size: .7rem;
+    margin-left: 3px;
+}
+
+/* ---------- this turn's build ---------- */
+.build-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.build-shape {
+    flex: 0 0 64px;
+    height: 64px;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px;
+}
+
+.mini {
+    display: grid;
+    gap: 2px;
+    align-content: center;
+    justify-content: center;
+}
+
+.mini div {
+    border-radius: 2px
+}
+
+.build-info {
+    flex: 1;
+    min-width: 0
+}
+
+.build-name {
+    font-weight: 700;
+    font-size: .95rem
+}
+
+.build-type {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: .68rem;
+    color: var(--muted);
+    letter-spacing: .04em;
+    margin-top: 2px;
+}
+
+.build-hint {
+    font-size: .75rem;
+    color: var(--muted);
+    line-height: 1.35;
+    margin-top: 5px;
+}
+
+.build-hint.ready {
+    color: var(--gold);
+    font-weight: 500;
+}
+
+.grant-msg {
+    font-size: .78rem;
+    color: var(--muted);
+    line-height: 1.45;
+    margin-bottom: 8px;
+}
+
+.grant-btns {
+    display: grid;
+    grid-template-columns:1fr 1fr;
+    gap: 7px;
+}
+
+.grant-btns button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.turnline {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: .64rem;
+    color: var(--muted);
+    margin-top: 8px;
+    letter-spacing: .04em;
+}
+
+.build-controls {
+    display: flex;
+    gap: 8px;
+    margin-top: 9px;
+}
+
+.build-controls button {
+    flex: 1
+}
+
+/* ---------- board (anchored to the bottom) ---------- */
+.board-wrap {
+    width: 100%;
+    max-width: 520px;
+    flex: 0 0 auto;
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
+}
+
+#board {
+    display: grid;
+    grid-template-columns:repeat(11, minmax(0, 1fr));
+    grid-template-rows:repeat(11, minmax(0, 1fr));
+    gap: 2px;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 6px;
+    width: 100%;
+    aspect-ratio: 1/1;
+    touch-action: manipulation;
+}
+
+.hint {
+    margin-top: 6px;
+    font-size: .62rem;
+}
+
+/* ---------- selection preview ---------- */
+.cell.zone {
+    opacity: .32;
+}
+
+.cell.constraint {
+    opacity: .62;
+    box-shadow: inset 0 0 0 2px var(--text);
+}
+
+.cell.ready {
+    box-shadow: inset 0 0 0 2px var(--paper-white);
+}
+
+.cell.clear-armed {
+    box-shadow: inset 0 0 0 2px #A8482C;
+}

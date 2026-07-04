@@ -98,3 +98,61 @@ function cardFitsSomewhere(board, card){
   }
   return false;
 }
+
+/* ---------------------------------------------------------------------
+ * PLACEMENT ENUMERATION — the touch-native mechanic (mobile) works by
+ * listing every way a card can land and narrowing that set as the player
+ * taps tiles. These helpers are pure and shared, so the desktop tests
+ * cover them too.
+ * ------------------------------------------------------------------- */
+
+/** Order-independent "r,c r,c …" signature of a covered-cell list. */
+function normalisedCellsKey(cells){
+  return cells.map(({row, col}) => row + "," + col).sort().join(" ");
+}
+
+/** The card's distinct orientations (up to 4 rotations × 2 flips), deduped
+ *  by cell signature so a symmetric shape yields only its real variants. */
+function cardOrientations(card){
+  const orientations = [];
+  const seen = new Set();
+  let candidate = card;
+  for(let flip = 0; flip < 2; flip++){
+    for(let rotation = 0; rotation < 4; rotation++){
+      const key = normalisedCellsKey(candidate.cells);
+      if(!seen.has(key)){ seen.add(key); orientations.push(candidate); }
+      candidate = rotateCardClockwise(candidate);
+    }
+    candidate = flipCardHorizontally(candidate);
+  }
+  return orientations;
+}
+
+/** Every valid on-board placement of the card across all orientations,
+ *  deduped by covered-cell set. Each entry is an array of {row,col}. */
+function allValidPlacements(board, card){
+  const placements = [];
+  const seen = new Set();
+  for(const orientation of cardOrientations(card)){
+    for(let row = 0; row < GRID_SIZE; row++){
+      for(let col = 0; col < GRID_SIZE; col++){
+        const cells = getPlacementCells(orientation, row, col);
+        if(!isPlacementValid(board, cells)) continue;
+        const key = normalisedCellsKey(cells);
+        if(seen.has(key)) continue;
+        seen.add(key);
+        placements.push(cells);
+      }
+    }
+  }
+  return placements;
+}
+
+/** The placements whose covered cells include every cell in `mustCover`. */
+function placementsCovering(placements, mustCover){
+  if(mustCover.length === 0) return placements;
+  return placements.filter(cells => {
+    const covered = new Set(cells.map(({row, col}) => row + "," + col));
+    return mustCover.every(({row, col}) => covered.has(row + "," + col));
+  });
+}

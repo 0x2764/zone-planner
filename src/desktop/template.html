@@ -4,6 +4,25 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Zone Planner — council land-use solitaire</title>
+<script>
+// Small touch screens get the finger-native mobile build, unless the player
+// opted out with ?desktop (remembered thereafter). Runs before anything
+// renders so the redirect is invisible. Relative path works from the site
+// root too, since index.html is a copy of this file.
+(function(){
+  try {
+    if(new URLSearchParams(location.search).has("desktop")){
+      localStorage.setItem("zp-force-desktop", "1");
+      return;
+    }
+    if(localStorage.getItem("zp-force-desktop")) return;
+  } catch(e){ /* no URLSearchParams / storage — just fall through */ }
+  if(window.matchMedia &&
+     window.matchMedia("(max-width: 760px) and (pointer: coarse)").matches){
+    location.replace("zone-planner.mobile.html");
+  }
+})();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -16,6 +35,7 @@
   <h1>Zone<span class="dot">Planner</span></h1>
   <span class="tagline">council land-use solitaire</span>
   <span class="spacer"></span>
+  <a href="zone-planner.mobile.html">Mobile version</a>
   <button id="undoBtn">Undo</button>
   <button id="newBtn">New year</button>
 </header>

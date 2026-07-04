@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Zone Planner — council land-use solitaire</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+{{STYLES}}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Zone<span class="dot">Planner</span></h1>
+  <span class="spacer"></span>
+  <a href="zone-planner.html?desktop">Desktop version</a>
+</header>
+
+<div class="scroll">
+  <div class="panel plan-panel">
+    <div class="plan-head">
+      <h2>The mayor's plan</h2>
+      <div class="total"><span class="label">Score</span><span class="value" id="total">0</span></div>
+    </div>
+    <div id="plan"></div>
+  </div>
+
+  <div class="panel build-panel">
+    <h2>This turn's build</h2>
+    <div id="build"></div>
+    <div class="turnline" id="turnline"></div>
+    <div class="build-controls">
+      <button id="undoBtn">Undo</button>
+      <button id="newBtn">New year</button>
+    </div>
+  </div>
+</div>
+
+<div class="board-wrap">
+  <div id="board" aria-label="11 by 11 block of land"></div>
+  <div class="hint">▲ mountains are unbuildable · tap the shape to build</div>
+</div>
+
+<div class="overlay hidden" id="overlay">
+  <div class="modal">
+    <h2>Annual review</h2>
+    <div class="sub" id="overSub"></div>
+    <div id="overLines"></div>
+    <div class="grand"><span>Final score</span><span class="pts" id="overTotal"></span></div>
+    <button id="againBtn">Plan another year</button>
+  </div>
+</div>
+
+<script>
+{{GAME_JS}}
+</script>
+</body>
+</html>
