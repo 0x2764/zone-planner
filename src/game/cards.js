@@ -5,7 +5,8 @@
  * card's own top-left corner. All cells share the card's single type.
  * ===================================================================== */
 
-/** Build the year's 20-card deck. Types are uniform; shapes lean per type.
+/** Build the year's deck — one card per turn (TOTAL_TURNS). Types are
+ *  uniform; shapes lean per type.
  *  No card (type+shape combination) appears more than once in a deck. */
 function createDeck(){
   const deck = [];

@@ -7,7 +7,7 @@
  * ===================================================================== */
 
 let board;            // 121 slots: null | "mountain" | type id
-let deck;             // the year's 20 improvement cards (never mutated)
+let deck;             // the year's improvement cards, one per turn (never mutated)
 let turnIndex;        // how many builds have been placed (0..20)
 let currentCard;      // the card in hand (a clone, so rotation is safe)
 let lastPlacedCard;   // the just-placed card, kept on show during the tally
