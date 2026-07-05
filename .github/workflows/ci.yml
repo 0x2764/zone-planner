@@ -1,8 +1,9 @@
 name: Build and test
 
-# Runs on every push and pull request. The build is dependency-free, so there
-# is no install step — just Node and one command. Pushes to main are also
-# published to GitHub Pages.
+# Runs on every push and pull request. The build renders RULES.md via `marked`
+# (a dev dependency), so each job installs deps before building. The shipped
+# dist/ HTML is still self-contained. Pushes to main are also published to
+# GitHub Pages.
 on:
   push:
   pull_request:
@@ -24,6 +25,8 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: '24'
+      - name: Install dev dependencies
+        run: npm ci
       # Builds dist/ and runs the test suite headlessly. Non-zero on failure.
       - name: Build and run tests
         run: node build.js --test
@@ -71,6 +74,8 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           node-version: '24'
+      - name: Install dev dependencies
+        run: npm ci
       - name: Build
         run: node build.js
       # Serve the game at the site root; the test page stays at

@@ -36,6 +36,20 @@ if(document.getElementById("board")){
   document.getElementById("newBtn").addEventListener("click", newGame);
   document.getElementById("againBtn").addEventListener("click", newGame);
 
+  // Rules modal: open from the header, close via the button, a backdrop click,
+  // or Escape. It only overlays the reference rulebook — it never touches game
+  // state, so open/close is pure show/hide.
+  const rulesOverlay = document.getElementById("rulesOverlay");
+  const setRulesOpen = open => rulesOverlay.classList.toggle("hidden", !open);
+  document.getElementById("rulesBtn").addEventListener("click", () => setRulesOpen(true));
+  document.getElementById("rulesCloseBtn").addEventListener("click", () => setRulesOpen(false));
+  rulesOverlay.addEventListener("click", e => {
+    if(e.target === rulesOverlay) setRulesOpen(false);
+  });
+  document.addEventListener("keydown", e => {
+    if(e.key === "Escape" && !rulesOverlay.classList.contains("hidden")) setRulesOpen(false);
+  });
+
   // ?seed=N — deterministic Math.random for a repeatable year (must be set
   // before newGame deals). ?test=1 — install the headless driver above.
   const params = new URLSearchParams(location.search);

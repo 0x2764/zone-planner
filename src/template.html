@@ -16,6 +16,7 @@
   <h1>Zone<span class="dot">Planner</span></h1>
   <span class="tagline">council land-use solitaire</span>
   <span class="spacer"></span>
+  <button id="rulesBtn">Rules</button>
   <button id="undoBtn">Undo</button>
   <button id="newBtn">New year</button>
 </header>
@@ -56,6 +57,13 @@
     <div id="overLines"></div>
     <div class="grand"><span>Final score</span><span class="pts" id="overTotal"></span></div>
     <button id="againBtn">Plan another year</button>
+  </div>
+</div>
+
+<div class="overlay hidden" id="rulesOverlay">
+  <div class="modal rules-modal">
+    <div class="rules-content">{{RULES_HTML}}</div>
+    <button id="rulesCloseBtn">Close</button>
   </div>
 </div>
 

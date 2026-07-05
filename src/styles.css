@@ -673,3 +673,83 @@ button:disabled {
     width: 100%;
     padding: 12px
 }
+
+/* The rules modal: wider than the review modal to give the rulebook's prose
+ * and tables room. The rendered RULES.md lives in .rules-content. */
+.rules-modal {
+    max-width: 680px
+}
+
+.rules-content {
+    font-size: .9rem;
+    line-height: 1.55;
+    color: var(--text);
+    margin-bottom: 20px;
+}
+
+.rules-content h1 {
+    font-family: "Space Grotesk", sans-serif;
+    font-size: 1.3rem;
+    margin-bottom: 6px;
+}
+
+.rules-content h2 {
+    font-size: .95rem;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 22px 0 8px;
+}
+
+.rules-content p {
+    margin: 10px 0
+}
+
+.rules-content ul {
+    margin: 10px 0;
+    padding-left: 20px;
+}
+
+.rules-content li {
+    margin: 4px 0
+}
+
+.rules-content strong {
+    color: var(--text);
+    font-weight: 600;
+}
+
+.rules-content em {
+    color: var(--muted)
+}
+
+.rules-content blockquote {
+    margin: 10px 0;
+    padding: 4px 14px;
+    border-left: 3px solid var(--line);
+    color: var(--muted);
+    font-style: italic;
+}
+
+/* Tables scroll horizontally on narrow screens so the modal never forces the
+ * page body sideways. */
+.rules-content table {
+    display: block;
+    overflow-x: auto;
+    border-collapse: collapse;
+    margin: 12px 0;
+    font-size: .82rem;
+}
+
+.rules-content th,
+.rules-content td {
+    border: 1px solid var(--line);
+    padding: 6px 10px;
+    text-align: left;
+    vertical-align: top;
+}
+
+.rules-content th {
+    font-weight: 600;
+    background: var(--panel-2);
+}

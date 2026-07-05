@@ -47,6 +47,18 @@ try {
   check(await page.evaluate(() => typeof window.__zp === "object"),
         "?test=1 exposes the window.__zp driver");
 
+  // ---- rules modal ------------------------------------------------------
+  // The Rules button reveals the rendered RULES.md (incl. its tables); Escape
+  // dismisses it again.
+  const rulesHidden = () => page.locator("#rulesOverlay").evaluate(el => el.classList.contains("hidden"));
+  check(await rulesHidden(), "rules modal starts hidden");
+  await page.locator("#rulesBtn").click();
+  check(!(await rulesHidden()), "clicking Rules opens the modal");
+  const rulesTables = await page.locator("#rulesOverlay .rules-content table").count();
+  check(rulesTables >= 2, `rendered rulebook shows its tables (${rulesTables})`);
+  await page.keyboard.press("Escape");
+  check(await rulesHidden(), "Escape closes the rules modal");
+
   // ---- reach the scoring tally -----------------------------------------
   // Play the first season out; the closing placement banks it and starts the
   // tally, which pulses scored tiles a beat later.

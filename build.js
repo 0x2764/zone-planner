@@ -25,6 +25,7 @@
 const fs = require("fs");
 const path = require("path");
 const vm = require("vm");
+const { marked } = require("marked");
 
 const ROOT = __dirname;
 const SRC = path.join(ROOT, "src");
@@ -32,6 +33,7 @@ const GAME_DIR = path.join(SRC, "game");
 const INSTR_DIR = path.join(SRC, "instructions");
 const TESTS_DIR = path.join(ROOT, "tests");
 const DIST = path.join(ROOT, "dist");
+const RULES = path.join(ROOT, "RULES.md");
 
 // The game fragments, in dependency order. Instructions slot in between
 // scoring-core (which declares the registry array) and the fragments that
@@ -90,17 +92,21 @@ function build(){
   const testsJs = read(path.join(TESTS_DIR, "zone-planner.tests.js"));
   // The FX sandbox: the same game plus the QA harness appended.
   const fxJs = `${gameJs}\n${read(path.join(SRC, "fx-sandbox.js"))}`;
+  // RULES.md rendered to HTML for the in-game rules modal — RULES.md stays the
+  // single source of truth; marked's default GFM handles its tables.
+  const rulesHtml = marked.parse(read(RULES));
 
   fs.mkdirSync(DIST, { recursive: true });
 
   const template = read(path.join(SRC, "template.html"));
 
-  const gameHtml = inline(
-    inline(template, "{{STYLES}}", css), "{{GAME_JS}}", gameJs);
+  // Shared markers for both playable builds; each then inlines its own script.
+  const page = inline(inline(template, "{{STYLES}}", css), "{{RULES_HTML}}", rulesHtml);
+
+  const gameHtml = inline(page, "{{GAME_JS}}", gameJs);
   fs.writeFileSync(path.join(DIST, "zone-planner.html"), gameHtml);
 
-  const fxHtml = inline(
-    inline(template, "{{STYLES}}", css), "{{GAME_JS}}", fxJs);
+  const fxHtml = inline(page, "{{GAME_JS}}", fxJs);
   fs.writeFileSync(path.join(DIST, "zone-planner.fx.html"), fxHtml);
 
   const testHtml = inline(
@@ -155,12 +161,17 @@ function checkBuiltOutput(){
     const leftover = html.match(/\{\{[A-Z_]+\}\}/);
     if(leftover) fail(`${name} has an unreplaced marker ${leftover[0]}`);
   }
-  // The two HTMLs that carry CSS must show the generated type styles.
+  // The two HTMLs that carry CSS must show the generated type styles, and the
+  // rendered rules — a stable phrase and the GFM table markup marked emits.
   for(const name of ["zone-planner.html", "zone-planner.fx.html"]){
     const html = read(path.join(DIST, name));
     if(!html.includes("--farm:")) fail(`${name} is missing the generated :root type vars`);
     if(!html.includes(".cell.farm{background-color:var(--farm)}"))
       fail(`${name} is missing the generated .cell.<type> rules`);
+    if(!html.includes("The instruction library"))
+      fail(`${name} is missing the rendered RULES.md content`);
+    if(!html.includes("<table>"))
+      fail(`${name} is missing the RULES.md tables (marked GFM output)`);
   }
   return ok;
 }
