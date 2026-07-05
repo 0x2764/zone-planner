@@ -11,47 +11,38 @@ function buildBoardElements(){
     for(let col = 0; col < GRID_SIZE; col++){
       const cellDiv = document.createElement("div");
       cellDiv.className = "cell";
-      cellDiv.addEventListener("pointerenter", () => {
-        if(!isTouchDevice) showHoverPreview(row, col);
-      });
       cellDiv.addEventListener("click", () => handleCellTap(row, col));
       boardElement.appendChild(cellDiv);
     }
   }
-  boardElement.addEventListener("pointerleave", () => {
-    if(!isTouchDevice){
-      previewPlacement = null;
-      renderBoard();
-      renderPlan();
-    }
-  });
 }
 
-function showHoverPreview(row, col){
-  previewPlacement = (isGameOver || !currentCard)
-    ? null : getPlacementCells(currentCard, row, col);
-  renderBoard();
-  renderPlan(); // live "+n" against the current season's instructions
-}
-
+/**
+ * Tap-to-draw. Each tap either confirms the resolved placement, narrows the
+ * working set to the placements covering the tapped cell, or — when the tap
+ * lands outside the current possibility zone — clears the in-progress draw.
+ */
 function handleCellTap(row, col){
   if(isGameOver || !currentCard) return;
+  const idx = cellIndex(row, col);
 
-  const placementCells = getPlacementCells(currentCard, row, col);
-  const valid = isPlacementValid(board, placementCells);
-
-  if(isTouchDevice){
-    const tapKey = row + "," + col;
-    if(lastTappedCellKey !== tapKey){
-      lastTappedCellKey = tapKey;
-      previewPlacement = placementCells;
-      renderBoard();
-      renderPlan();
-      return;
-    }
+  // Confirm: only one placement remains and the tap lands on it.
+  if(candidatePlacements.length === 1 && candidatePlacements[0].includes(idx)){
+    placeCurrentCard(candidatePlacements[0].map(cellRowCol));
+    return;
   }
 
-  if(valid) placeCurrentCard(placementCells);
+  // Narrow: keep the placements that also cover this cell.
+  const narrowed = candidatePlacements.filter(p => p.includes(idx));
+  if(narrowed.length > 0){
+    selectedCells.push(idx);
+    candidatePlacements = narrowed;
+  } else {
+    // Outside the possibility zone (or a filled/mountain tile): start over.
+    selectedCells = [];
+    candidatePlacements = allPlacements;
+  }
+  renderAll();
 }
 
 function renderBoard(){
@@ -74,18 +65,28 @@ function renderBoard(){
     }
   }
 
-  // Pass 2: ghost preview of the card being placed.
-  if(previewPlacement && currentCard){
-    const valid = isPlacementValid(board, previewPlacement);
-    for(const {row, col} of previewPlacement){
-      if(!isInsideGrid(row, col)) continue;
-      const cellDiv = cellDivs[cellIndex(row, col)];
-      if(valid){
-        cellDiv.classList.add("ghost");
-        cellDiv.style.background = TYPE_HEX[currentCard.type];
-      } else if(board[cellIndex(row, col)] === null){
-        cellDiv.classList.add("ghost-bad");
+  // Pass 2: the tap-to-draw preview.
+  if(currentCard && !isGameOver){
+    if(candidatePlacements.length === 1){
+      // Resolved to one placement — a solid ghost the next tap confirms.
+      for(const index of candidatePlacements[0]){
+        cellDivs[index].classList.add("ghost");
+        cellDivs[index].style.background = TYPE_HEX[currentCard.type];
       }
+    } else if(selectedCells.length > 0){
+      // Still narrowing — wash the union of the surviving placements.
+      const zone = new Set();
+      for(const placement of candidatePlacements){
+        for(const index of placement) zone.add(index);
+      }
+      for(const index of zone){
+        cellDivs[index].classList.add("possible");
+        cellDivs[index].style.background = TYPE_HEX[currentCard.type];
+      }
+    }
+    // Mark the tiles the player has locked in as constraints.
+    for(const index of selectedCells){
+      cellDivs[index].classList.add("selected");
     }
   }
 }
@@ -99,12 +100,12 @@ function renderBoard(){
 function renderPlan(){
   const csi = currentSeasonIndex();
 
+  // Score the "+n" delta only once the draw has resolved to a single placement.
+  const resolved = candidatePlacements.length === 1 ? candidatePlacements[0] : null;
   let hypotheticalBoard = null;
-  if(previewPlacement && currentCard && isPlacementValid(board, previewPlacement)){
+  if(resolved && currentCard){
     hypotheticalBoard = board.slice();
-    for(const {row, col} of previewPlacement){
-      hypotheticalBoard[cellIndex(row, col)] = currentCard.type;
-    }
+    for(const index of resolved) hypotheticalBoard[index] = currentCard.type;
   }
 
   let liveCurrentSeasonTotal = 0;
@@ -210,16 +211,8 @@ function renderBuild(){
         <div class="build-info">
           <div class="build-name">${currentCard.name}</div>
           <div class="build-type">${chipHtml(currentCard.type)} · ${currentCard.cells.length} tile${currentCard.cells.length > 1 ? "s" : ""}</div>
-          <div class="controls">
-            <button id="rotBtn" ${currentCard.cells.length < 2 ? "disabled" : ""}>Rotate (R)</button>
-            <button id="flipBtn" ${currentCard.cells.length < 2 ? "disabled" : ""}>Flip (F)</button>
-          </div>
         </div>
       </div>`;
-    document.getElementById("rotBtn").addEventListener("click",
-      () => transformCurrentCard(rotateCardClockwise));
-    document.getElementById("flipBtn").addEventListener("click",
-      () => transformCurrentCard(flipCardHorizontally));
   }
 
   const s = currentSeasonIndex();
@@ -228,14 +221,6 @@ function renderBuild(){
     + ` · ${TOTAL_TURNS - turnIndex} builds left in the year`;
 
   document.getElementById("undoBtn").disabled = undoHistory.length === 0;
-}
-
-function transformCurrentCard(transform){
-  if(isGameOver || !currentCard || grantPending || currentCard.cells.length < 2) return;
-  currentCard = transform(currentCard);
-  previewPlacement = null;
-  lastTappedCellKey = null;
-  renderAll();
 }
 
 function renderAll(){

@@ -13,10 +13,5 @@ if(document.getElementById("board")){
   document.getElementById("newBtn").addEventListener("click", newGame);
   document.getElementById("againBtn").addEventListener("click", newGame);
 
-  document.addEventListener("keydown", event => {
-    if(event.key === "r" || event.key === "R") transformCurrentCard(rotateCardClockwise);
-    if(event.key === "f" || event.key === "F") transformCurrentCard(flipCardHorizontally);
-  });
-
   newGame();
 }

@@ -4,6 +4,7 @@
 
 const randomItem = array => array[Math.floor(Math.random() * array.length)];
 const cellIndex = (row, col) => row * GRID_SIZE + col;
+const cellRowCol = index => ({row: Math.floor(index / GRID_SIZE), col: index % GRID_SIZE});
 const isInsideGrid = (row, col) =>
   row >= 0 && row < GRID_SIZE && col >= 0 && col < GRID_SIZE;
 const deepClone = value => JSON.parse(JSON.stringify(value));

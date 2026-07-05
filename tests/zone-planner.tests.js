@@ -187,6 +187,38 @@ test("cardFitsSomewhere respects the exact open space", () => {
   assert(!cardFitsSomewhere(board, makeCard("farm", SHAPES.I3)), "triomino cannot");
 });
 
+test("allValidPlacements enumerates every footprint, deduped by symmetry", () => {
+  // I3 on an empty board: 11×9 horizontal + 9×11 vertical = 198 distinct
+  // footprints (the 180° rotation and both flips land on cells already seen).
+  assertEqual(allValidPlacements(emptyBoard(), makeCard("farm", SHAPES.I3)).length, 198);
+  // O4 is fully symmetric — one footprint per top-left corner, not four.
+  assertEqual(allValidPlacements(emptyBoard(), makeCard("lake", SHAPES.O4)).length, 100);
+  // A 1×1 fits on every open cell.
+  assertEqual(allValidPlacements(emptyBoard(), makeCard("city", SHAPES.M1)).length, 121);
+});
+
+test("allValidPlacements returns only valid, correctly-sized placements", () => {
+  const card = makeCard("forest", SHAPES.L3);
+  const placements = allValidPlacements(emptyBoard(), card);
+  assert(placements.length > 0, "L3 fits on an empty board");
+  for(const placement of placements){
+    assertEqual(placement.length, card.cells.length, "one cell per tile");
+    const cells = placement.map(cellRowCol);
+    assert(isPlacementValid(emptyBoard(), cells), "every placement is valid");
+    assertEqual(new Set(placement).size, placement.length, "no repeated cell");
+  }
+});
+
+test("allValidPlacements shrinks as the board fills", () => {
+  const open = allValidPlacements(emptyBoard(), makeCard("farm", SHAPES.D2)).length;
+  const blocked = emptyBoard();
+  set(blocked, 5, 5, MOUNTAIN);
+  assert(allValidPlacements(blocked, makeCard("farm", SHAPES.D2)).length < open,
+    "a mountain removes every domino that would cover it");
+  assertEqual(allValidPlacements(new Array(GRID_SIZE * GRID_SIZE).fill("city"),
+    makeCard("farm", SHAPES.D2)).length, 0, "no room on a full board");
+});
+
 /* =====================================================================
  * DECK & GRANT
  * ===================================================================== */

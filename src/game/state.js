@@ -17,10 +17,21 @@ let undoHistory;
 let tilesPlacedCount;
 let isGameOver;
 
-let previewPlacement = null;
-let lastTappedCellKey = null;
+// Tap-to-draw placement. `allPlacements` is every valid placement of the
+// current card; each tap on a cell constrains the working set down to the
+// `candidatePlacements` that cover all `selectedCells`, until one remains.
+let allPlacements = [];        // [[cellIndex, ...], ...] — every valid placement
+let selectedCells = [];        // cell indices the player has tapped as constraints
+let candidatePlacements = [];  // allPlacements still covering every selectedCell
 
-const isTouchDevice = window.matchMedia("(pointer: coarse)").matches;
+/** Recompute the placement working set for the current card and board,
+ *  clearing any in-progress selection. Call whenever the card or board changes. */
+function refreshPlacements(){
+  allPlacements = (currentCard && !grantPending)
+    ? allValidPlacements(board, currentCard) : [];
+  selectedCells = [];
+  candidatePlacements = allPlacements;
+}
 
 /** Which season is currently being played? Returns 4 after winter. */
 function currentSeasonIndex(){
@@ -56,8 +67,6 @@ function newGame(){
   undoHistory = [];
   tilesPlacedCount = 0;
   isGameOver = false;
-  previewPlacement = null;
-  lastTappedCellKey = null;
 
   startTurn();
   document.getElementById("overlay").classList.add("hidden");
@@ -73,6 +82,7 @@ function startTurn(){
   currentCard = deepClone(deck[turnIndex]);
   grantPending = !cardFitsSomewhere(board, currentCard);
   if(grantPending) currentCard = null;
+  refreshPlacements();
 }
 
 /** The player picked the type for their council grant. */
@@ -80,6 +90,7 @@ function chooseGrantType(typeId){
   if(!grantPending || isGameOver) return;
   currentCard = createGrantCard(typeId);
   grantPending = false;
+  refreshPlacements();
   renderAll();
 }
 
@@ -93,8 +104,7 @@ function undoLastPlacement(){
   if(undoHistory.length === 0 || isGameOver) return;
   ({board, turnIndex, currentCard, grantPending,
     tilesPlacedCount, bankedSeasons} = undoHistory.pop());
-  previewPlacement = null;
-  lastTappedCellKey = null;
+  refreshPlacements();
   renderAll();
 }
 
@@ -117,9 +127,6 @@ function placeCurrentCard(placementCells){
   }
   tilesPlacedCount += placementCells.length;
   turnIndex++;
-
-  previewPlacement = null;
-  lastTappedCellKey = null;
 
   // Did that placement close out a season?
   const seasonJustEnded = SEASON_END.indexOf(turnIndex);

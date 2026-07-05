@@ -98,3 +98,36 @@ function cardFitsSomewhere(board, card){
   }
   return false;
 }
+
+/**
+ * Every distinct valid placement of `card` on `board`, across all orientations
+ * and positions. Each placement is a sorted array of board cell indices.
+ *
+ * Placements are deduped by FOOTPRINT — the exact set of cells filled — so
+ * orientations that cover the same cells (a symmetric O4 square, an I-piece and
+ * its 180° twin) collapse to one entry. Distinct footprints, not orientation
+ * labels, are what the tap-to-draw UI narrows over.
+ */
+function allValidPlacements(board, card){
+  const seen = new Set();
+  const placements = [];
+  let candidate = card;
+  for(let flip = 0; flip < 2; flip++){
+    for(let rotation = 0; rotation < 4; rotation++){
+      for(let row = 0; row < GRID_SIZE; row++){
+        for(let col = 0; col < GRID_SIZE; col++){
+          const cells = getPlacementCells(candidate, row, col);
+          if(!isPlacementValid(board, cells)) continue;
+          const indices = cells.map(c => cellIndex(c.row, c.col)).sort((a, b) => a - b);
+          const key = indices.join(",");
+          if(seen.has(key)) continue;
+          seen.add(key);
+          placements.push(indices);
+        }
+      }
+      candidate = rotateCardClockwise(candidate);
+    }
+    candidate = flipCardHorizontally(candidate);
+  }
+  return placements;
+}

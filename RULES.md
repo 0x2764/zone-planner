@@ -31,7 +31,7 @@ Some instructions are fixed (Irrigation always cares about farms touching lakes,
 
 Each turn, the council deals you one **improvement card** from their inventory — you never know what's coming next. A card is a polyomino of 1 to 5 tiles, all of a single improvement type, with a name describing what's being built (a farm I-piece might be a *Grain Silo Row*; a lake 2×2, a *Mill Pond*). Each type leans toward characteristic silhouettes — farms toward strips, lakes toward blobs, forests toward irregular clumps, cities toward compact blocks — but nothing is guaranteed.
 
-You may **rotate** and **flip** the card freely, then place it anywhere on the block where every tile lands on open land. Placements can never overlap existing improvements or mountains, and once built, an improvement is permanent. You must place the card — there is no skipping or discarding.
+The card has a fixed silhouette, but you may place it in **any rotation or reflection**, anywhere on the block where every tile lands on open land. You don't turn the card by hand — you draw it directly onto the block (see **Controls**), and the game works out which orientation you mean. Placements can never overlap existing improvements or mountains, and once built, an improvement is permanent. You must place the card — there is no skipping or discarding.
 
 **The council grant.** If the dealt card doesn't fit anywhere on the block, in any rotation or flip, the council builds a **1×1 improvement of your choice** instead. This is the only moment in the game where you choose a type — a small consolation prize that a canny planner can sometimes engineer on purpose.
 
@@ -66,7 +66,11 @@ A **group** is a set of same-type tiles connected edge-to-edge (diagonals don't 
 
 ## Controls
 
-Rotate the dealt card with **R** and flip it with **F** (or the on-screen buttons). Hover over the block to preview the placement — and the points it would earn — then click to build. On touch screens, tap once to preview and tap the same spot again to confirm. **Undo** takes back placements one at a time, all the way to the start of the year; it can even reopen a season that was just banked. **New year** deals a fresh block, deck, and plan.
+You place a card by **drawing it onto the block, one tap at a time**. Tap a parcel and the block highlights every spot the card could still cover while including that parcel; tap another parcel to narrow the possibilities further. As soon as a single placement remains it appears as a solid ghost showing exactly where the card will land — and the plan panel previews the points it would earn — so tap that ghost once more to build. Tapping a parcel the card can't reach (or a filled or mountain tile) clears your draw so you can start over.
+
+Because the game reads the card's orientation from the parcels you pick, there are no rotate or flip controls: any rotation or reflection that fits is available simply by drawing it. The same taps work identically with a mouse or on a touch screen.
+
+**Undo** takes back placements one at a time, all the way to the start of the year; it can even reopen a season that was just banked. **New year** deals a fresh block, deck, and plan.
 
 ## Advice from the outgoing planner
 
