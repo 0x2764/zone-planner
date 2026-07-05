@@ -537,6 +537,84 @@ test("every instruction's details sum to its score on a busy board", () => {
 });
 
 /* =====================================================================
+ * FX / KUDO LABELS — the "+n" coins the tally floats off each scored tile.
+ * The screen must always add up to the score, so this is where that lives.
+ * (kudoLabelsForFeature and nearestToCentroid are pure functions from fx.js,
+ * in the bundle but never run headlessly — call them directly.)
+ * ===================================================================== */
+
+/** A feature literal for label tests: pts spread over the given cell indices. */
+const feature = (pts, cells) => ({ pts, cells });
+
+/** Sum the numbers a features list would show — sparks ("✦") count as 0. */
+function sumKudoNumbers(features){
+  let total = 0;
+  for(const f of features){
+    for(const { text } of kudoLabelsForFeature(f)){
+      if(text !== "✦") total += Number(text);   // "+2" → 2
+    }
+  }
+  return total;
+}
+
+test("nearestToCentroid picks the middle of a straight line", () => {
+  // A horizontal triomino in row 5: the centre tile is nearest the centroid.
+  const cells = [cellIndex(5, 4), cellIndex(5, 5), cellIndex(5, 6)];
+  assertEqual(nearestToCentroid(cells), cellIndex(5, 5));
+});
+
+test("nearestToCentroid picks the corner of an L", () => {
+  // The elbow at (0,0) is closest to the shape's centre of mass.
+  const cells = [cellIndex(0, 0), cellIndex(0, 1), cellIndex(1, 0)];
+  assertEqual(nearestToCentroid(cells), cellIndex(0, 0));
+});
+
+test("kudoLabels: an even split gives every tile its share, no sparks", () => {
+  const labels = kudoLabelsForFeature(feature(6, [10, 11, 12])); // 6 / 3 = 2
+  assertEqual(labels.length, 3);
+  assert(labels.every(l => l.text === "+2"), "every tile shows +2");
+  assert(labels.every(l => !l.isSpark), "no sparks on an even split");
+  assertEqual(sumKudoNumbers([feature(6, [10, 11, 12])]), 6, "numbers sum to pts");
+});
+
+test("kudoLabels: an uneven split labels one tile and sparks the rest", () => {
+  const cells = [cellIndex(5, 4), cellIndex(5, 5), cellIndex(5, 6)];
+  const labels = kudoLabelsForFeature(feature(8, cells)); // 8 / 3 is not integer
+  const numbered = labels.filter(l => !l.isSpark);
+  assertEqual(numbered.length, 1, "exactly one numbered coin");
+  assertEqual(numbered[0].text, "+8", "it carries the full points");
+  assertEqual(numbered[0].index, cellIndex(5, 5), "on the centre tile");
+  assert(labels.filter(l => l.isSpark).every(l => l.text === "✦"), "the rest are sparks");
+  assertEqual(sumKudoNumbers([feature(8, cells)]), 8, "numbers still sum to pts");
+});
+
+test("kudoLabels: a single-tile feature shows its full points, no spark", () => {
+  const labels = kudoLabelsForFeature(feature(8, [42]));
+  assertEqual(labels.length, 1);
+  assertEqual(labels[0].text, "+8");
+  assert(!labels[0].isSpark, "a lone tile is never a spark");
+});
+
+test("on-screen kudo numbers sum to score for every instruction (busy board)", () => {
+  // Same board as the details-sum-to-score test: a bit of everything.
+  const board = emptyBoard();
+  for(let c = 0; c < GRID_SIZE; c++) set(board, 0, c, ["farm", "lake", "forest", "city"][c % 4]);
+  set(board, 5, 5, MOUNTAIN);
+  set(board, 5, 4, "farm"); set(board, 4, 5, "farm"); set(board, 5, 6, "lake");
+  set(board, 6, 5, "lake"); set(board, 6, 6, "lake"); set(board, 7, 6, "lake");
+  set(board, 2, 2, "city"); set(board, 2, 3, "city");
+  set(board, 3, 2, "city"); set(board, 3, 3, "city");
+  set(board, 10, 0, "forest"); set(board, 10, 1, "forest");
+  for(const template of INSTRUCTION_TEMPLATES){
+    for(const randomValue of [0, .3, .6, .9]){
+      const instruction = withMockedRandom(randomValue, () => template.deal());
+      assertEqual(sumKudoNumbers(instruction.details(board)), instruction.score(board),
+        `${instruction.name} — kudo numbers sum to score`);
+    }
+  }
+});
+
+/* =====================================================================
  * REPORTING
  * ===================================================================== */
 

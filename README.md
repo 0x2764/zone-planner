@@ -8,12 +8,16 @@ Play it online — every push to `main` is published to **GitHub Pages** (see th
 
 ### Developing
 
-The game is written as small, focused source fragments under `src/` and compiled into the self-contained `dist/` files by a zero-dependency Node script:
+The game is written as small, focused source fragments under `src/` and compiled into the self-contained `dist/` files by a zero-dependency Node script. The shipped game has no dependencies; the only dev dependency is Playwright, used solely by the end-to-end test.
 
 ```
 node build.js          # build dist/zone-planner.html + dist/zone-planner.fx.html + dist/zone-planner.tests.html
-node build.js --test    # build, then run the test suite headlessly (non-zero exit on failure)
+node build.js --test    # build, run the unit suite headlessly, and check the built HTML (non-zero exit on failure)
+npm run test:e2e        # boot dist/ in headless Chromium, drive a season to its scoring tally, screenshot it
+                        # (first time: npm ci && npx playwright install chromium)
 ```
+
+The e2e test drives the game through two no-op-in-normal-play URL hooks: `?seed=N` makes the whole year deterministic, and `?test=1` exposes a `window.__zp` driver. See `.claude/skills/verify/SKILL.md` for the full verification recipe.
 
 - **Add a scoring instruction** — drop a file in `src/instructions/` that calls `registerInstruction({ deal() { … } })`. The build globs it in automatically.
 - **Tune the season-tally animation** — open `dist/zone-planner.fx.html`, the FX/QA sandbox: slow the fx clock ×10/×100/×1000, pause with Space, step beats with `n`, replay the last tally with `r`, and auto-deal to the next season end with `a`. An overlay shows which beat is playing.

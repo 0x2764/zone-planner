@@ -186,19 +186,12 @@ function playInstructionBeat(seasonIdx, i, features, pts, totalBase){
     for(const index of pulsed) boardElement.children[index].classList.remove("scored");
   }, FX_BEAT_INSTR);
 
-  // One kudo per contributing tile. When a feature's points divide evenly
-  // across its tiles each kudo carries the share (+2, +1...); otherwise the
-  // tile nearest the feature's centre carries the full +pts and the rest
-  // are wordless sparks — numbers on screen always sum to the real score.
+  // One kudo per contributing tile — see kudoLabelsForFeature for how each is
+  // labelled. The numbers on screen always sum to the real score.
   let k = 0;
   const coins = [];
   for(const feature of features){
-    const perTile = feature.pts / feature.cells.length;
-    const labelled = Number.isInteger(perTile) ? null : nearestToCentroid(feature.cells);
-    for(const index of feature.cells){
-      const isSpark = labelled !== null && index !== labelled;
-      const text = labelled === null ? `+${perTile}`
-                 : (isSpark ? "✦" : `+${feature.pts}`);
+    for(const { index, text, isSpark } of kudoLabelsForFeature(feature)){
       coins.push({ el: spawnKudo(index, text, Math.min(k * 18, 320), isSpark), index });
       k++;
     }
@@ -210,6 +203,25 @@ function playInstructionBeat(seasonIdx, i, features, pts, totalBase){
   fxCountUp(document.getElementById(`ipts-${seasonIdx}-${i}`),
             document.getElementById("total"),
             totalBase, pts, FX_BEAT_INSTR * .9);
+}
+
+/** How each contributing tile of a feature is labelled. When the feature's
+ *  points divide evenly across its tiles, every tile carries the share
+ *  ("+2", "+1"…); otherwise the tile nearest the feature's centre carries the
+ *  full "+pts" and the rest are wordless sparks ("✦"). Either way the numbers
+ *  shown always sum to feature.pts. Returns [{index, text, isSpark}] in cell
+ *  order — pure, so it is unit-tested directly. */
+function kudoLabelsForFeature(feature){
+  const perTile = feature.pts / feature.cells.length;
+  const labelled = Number.isInteger(perTile) ? null : nearestToCentroid(feature.cells);
+  return feature.cells.map(index => {
+    const isSpark = labelled !== null && index !== labelled;
+    return {
+      index,
+      isSpark,
+      text: labelled === null ? `+${perTile}` : (isSpark ? "✦" : `+${feature.pts}`),
+    };
+  });
 }
 
 /** The cell index nearest the centroid of a feature's cells. */

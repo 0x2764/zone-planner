@@ -140,8 +140,35 @@ function runTests(){
   return pageTitle.startsWith("PASS");
 }
 
+/**
+ * Guard the built HTML: every {{MARKER}} must have been substituted, and the
+ * per-type CSS generated from TYPES must be present. Catches a broken marker
+ * or empty generation — which the JS-only test suite can't see — before it
+ * ships green. Logs each failure and returns whether the output is sound.
+ */
+function checkBuiltOutput(){
+  const outputs = ["zone-planner.html", "zone-planner.fx.html", "zone-planner.tests.html"];
+  let ok = true;
+  const fail = msg => { console.log("  ✗ build output — " + msg); ok = false; };
+  for(const name of outputs){
+    const html = read(path.join(DIST, name));
+    const leftover = html.match(/\{\{[A-Z_]+\}\}/);
+    if(leftover) fail(`${name} has an unreplaced marker ${leftover[0]}`);
+  }
+  // The two HTMLs that carry CSS must show the generated type styles.
+  for(const name of ["zone-planner.html", "zone-planner.fx.html"]){
+    const html = read(path.join(DIST, name));
+    if(!html.includes("--farm:")) fail(`${name} is missing the generated :root type vars`);
+    if(!html.includes(".cell.farm{background-color:var(--farm)}"))
+      fail(`${name} is missing the generated .cell.<type> rules`);
+  }
+  return ok;
+}
+
 if(process.argv.includes("--test")){
-  process.exit(runTests() ? 0 : 1);
+  const testsPass = runTests();
+  const outputOk = checkBuiltOutput();
+  process.exit(testsPass && outputOk ? 0 : 1);
 } else {
   build();
   console.log("Built dist/zone-planner.html, dist/zone-planner.fx.html and dist/zone-planner.tests.html");
