@@ -15,28 +15,32 @@
 
 const TYPES = [
   { id:"farm", name:"Farm", hex:"#D07F2E", groupName:"Bread Basket",   /* ochre */
-    shapeWeights:{M1:.2, D2:1,   I3:1,  L3:.4, I4:1,   O4:.15, T4:.2, S4:.2, L4:1,  P5:.1, L5:.4, T5:.1},
+    shapeWeights:{M1:.2, D2:1,   I3:1,  L3:.4, I4:1,   O4:.15, T4:.2, S4:.2, L4:1,  P5:.1, L5:.4, T5:.1, X2:.2, X3:.2, V5:.3},
     cardNames:{M1:"Windmill",      D2:"Beehives",       I3:"Berry Rows",     L3:"Hop Garden",
                I4:"Grain Silo Row", O4:"Dairy Paddock",  T4:"Orchard Cross",  S4:"Terraced Paddies",
-               L4:"Cattle Run",     P5:"Homestead Farm", L5:"Irrigation Boom", T5:"Vineyard Estate"} },
+               L4:"Cattle Run",     P5:"Homestead Farm", L5:"Irrigation Boom", T5:"Vineyard Estate",
+               X2:"Furrow Steps",   X3:"Terrace Climb",  V5:"Victory Garden"} },
 
   { id:"lake", name:"Lake", hex:"#4A86BC", groupName:"Great Lake",     /* washed prussian */
-    shapeWeights:{M1:.4, D2:.4,  I3:.2, L3:.4, I4:.15, O4:1,   T4:.2, S4:1,  L4:.2, P5:1,  L5:.1, T5:.1},
+    shapeWeights:{M1:.4, D2:.4,  I3:.2, L3:.4, I4:.15, O4:1,   T4:.2, S4:1,  L4:.2, P5:1,  L5:.1, T5:.1, X2:.3, X3:.2, V5:.2},
     cardNames:{M1:"Spring Pool",   D2:"Duck Pond",      I3:"Canal Reach",    L3:"Creek Bend",
                I4:"River Run",      O4:"Mill Pond",      T4:"Estuary",        S4:"Meander",
-               L4:"Marina",         P5:"Deep Basin",     L5:"Long Fjord",     T5:"Delta Fork"} },
+               L4:"Marina",         P5:"Deep Basin",     L5:"Long Fjord",     T5:"Delta Fork",
+               X2:"Stepping Pools", X3:"Cascade",        V5:"Aqueduct"} },
 
   { id:"forest", name:"Forest", hex:"#578F55", groupName:"National Park", /* verdigris */
-    shapeWeights:{M1:.4, D2:.4,  I3:.4, L3:1,  I4:.1,  O4:.15, T4:1,  S4:1,  L4:.2, P5:.2, L5:.1, T5:1},
+    shapeWeights:{M1:.4, D2:.4,  I3:.4, L3:1,  I4:.1,  O4:.15, T4:1,  S4:1,  L4:.2, P5:.2, L5:.1, T5:1,  X2:.5, X3:.5, V5:.4},
     cardNames:{M1:"Lone Oak",      D2:"Twin Pines",     I3:"Windbreak",      L3:"Copse Corner",
                I4:"Shelter Belt",   O4:"Old Growth Stand",T4:"Ranger Junction",S4:"Wild Thicket",
-               L4:"Timber Reserve", P5:"Deep Woods",     L5:"Ridge Forest",   T5:"Fern Gully"} },
+               L4:"Timber Reserve", P5:"Deep Woods",     L5:"Ridge Forest",   T5:"Fern Gully",
+               X2:"Saplings",       X3:"Hillside Grove", V5:"Regional Park"} },
 
   { id:"city", name:"City", hex:"#8E1914", groupName:"Metropolis",     /* brick red */
-    shapeWeights:{M1:.15,D2:.2,  I3:.4, L3:.2, I4:.1,  O4:1,   T4:1,  S4:.2, L4:1,  P5:1,  L5:.1, T5:.4},
+    shapeWeights:{M1:.15,D2:.2,  I3:.4, L3:.2, I4:.1,  O4:1,   T4:1,  S4:.2, L4:1,  P5:1,  L5:.1, T5:.4, X2:.2, X3:.2, V5:.2},
     cardNames:{M1:"Corner Store",  D2:"Row Houses",     I3:"Main Street",    L3:"Bus Depot",
                I4:"High Street",    O4:"Town Square",    T4:"Civic Centre",   S4:"Terrace Blocks",
-               L4:"Rail Yard",      P5:"Market District", L5:"Ring Road",      T5:"Town Hall Precinct"} },
+               L4:"Rail Yard",      P5:"Market District", L5:"Ring Road",      T5:"Town Hall Precinct",
+               X2:"Split Lots",     X3:"Hillside Steps", V5:"Base Hospital"} },
 ];
 
 /* Derived lookups — same values the game has always used, keyed by type id. */

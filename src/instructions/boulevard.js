@@ -1,8 +1,8 @@
-// Boulevard: completed rows (mountains count as filled).
+// Through Streets: completed rows (mountains count as filled).
 registerInstruction({
   deal(){
     return {
-      name: "Boulevard",
+      name: "Through Streets",
       desc: `8 points per completely filled row. ▲ mountains count as filled.`,
       score(board){
         let points = 0;

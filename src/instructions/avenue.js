@@ -1,8 +1,8 @@
-// Avenue: completed columns (mountains count as filled).
+// Avenues: completed columns (mountains count as filled).
 registerInstruction({
   deal(){
     return {
-      name: "Avenue",
+      name: "Avenues",
       desc: `8 points per completely filled column. ▲ mountains count as filled.`,
       score(board){
         let points = 0;

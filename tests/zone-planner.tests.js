@@ -312,11 +312,11 @@ test("countTilesWithNeighbour counts tiles with a matching neighbour", () => {
  * FIXED-TARGET INSTRUCTIONS
  * ===================================================================== */
 
-test("Irrigation scores one point per farm–lake edge", () => {
+test("Irrigation scores two points per farm–lake edge", () => {
   const board = emptyBoard();
   set(board, 5, 5, "farm");
   set(board, 5, 4, "lake"); set(board, 5, 6, "lake"); set(board, 4, 5, "lake");
-  assertEqual(dealByName("Irrigation").score(board), 3);
+  assertEqual(dealByName("Irrigation").score(board), 6);
 });
 
 test("Greenbelt counts only forest tiles on the edge", () => {
@@ -365,37 +365,37 @@ test("Reservoirs scores lake groups of 3+ tiles only", () => {
   assertEqual(dealByName("Reservoirs").score(small), 0);
 });
 
-test("Boulevard scores filled rows, counting mountains as filled", () => {
+test("Through Streets scores filled rows, counting mountains as filled", () => {
   const clean = emptyBoard();
   for(let c = 0; c < GRID_SIZE; c++) set(clean, 0, c, "city");
-  assertEqual(dealByName("Boulevard").score(clean), 8, "a fully built row");
+  assertEqual(dealByName("Through Streets").score(clean), 8, "a fully built row");
 
   const withPeak = emptyBoard();
   for(let c = 0; c < GRID_SIZE; c++) set(withPeak, 3, c, "city");
   set(withPeak, 3, 5, MOUNTAIN);
-  assertEqual(dealByName("Boulevard").score(withPeak), 8, "mountain counts as filled");
+  assertEqual(dealByName("Through Streets").score(withPeak), 8, "mountain counts as filled");
 
   const gappy = emptyBoard();
   for(let c = 0; c < GRID_SIZE; c++) set(gappy, 4, c, "city");
   set(gappy, 4, 5, null);
-  assertEqual(dealByName("Boulevard").score(gappy), 0, "one gap breaks the row");
+  assertEqual(dealByName("Through Streets").score(gappy), 0, "one gap breaks the row");
 });
 
-test("Avenue scores filled columns", () => {
+test("Avenues scores filled columns", () => {
   const board = emptyBoard();
   for(let r = 0; r < GRID_SIZE; r++) set(board, r, 2, "lake");
-  assertEqual(dealByName("Avenue").score(board), 8);
+  assertEqual(dealByName("Avenues").score(board), 8);
 });
 
-test("Diversity Quota rewards rows with 3+ types, ignoring mountains", () => {
+test("Mixed Use rewards rows with 3+ types, ignoring mountains", () => {
   const three = emptyBoard();
   set(three, 0, 0, "farm"); set(three, 0, 1, "lake"); set(three, 0, 2, "forest");
-  assertEqual(dealByName("Diversity Quota").score(three), 4);
+  assertEqual(dealByName("Mixed Use").score(three), 4);
 
   const twoPlusMountain = emptyBoard();
   set(twoPlusMountain, 0, 0, "farm"); set(twoPlusMountain, 0, 1, "lake");
   set(twoPlusMountain, 0, 2, MOUNTAIN);
-  assertEqual(dealByName("Diversity Quota").score(twoPlusMountain), 0, "mountain is not a type");
+  assertEqual(dealByName("Mixed Use").score(twoPlusMountain), 0, "mountain is not a type");
 });
 
 /* =====================================================================

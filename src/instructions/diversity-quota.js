@@ -1,8 +1,8 @@
-// Diversity Quota: mixed-use rows.
+// Mixed Use: add a diversity quota to rows.
 registerInstruction({
   deal(){
     return {
-      name: "Diversity Quota",
+      name: "Mixed Use",
       desc: `4 points per row containing at least 3 different improvement types.`,
       score(board){
         let points = 0;

@@ -216,8 +216,10 @@ button:disabled {
 }
 
 /* Once the draw resolves to a single placement, the ghost is showing and the
-   next tap will build — brighten the locked-in tiles' ring to cue the confirm. */
-.cell.selected.ghost {
+   next tap will build — ring the whole shape (not just the tapped tiles) with a
+   brighter outline to cue the confirm. Placed after `.cell.selected` so this
+   box-shadow wins by source order on the tiles that carry both classes. */
+.cell.ghost {
     box-shadow: inset 0 0 0 3px #FFB224
 }
 
