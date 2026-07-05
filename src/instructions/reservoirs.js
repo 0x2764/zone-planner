@@ -1,14 +1,16 @@
-// Reservoirs: substantial bodies of water (lake groups of 3+).
+// Reservoirs: substantial bodies of water (lake groups of 3+). Scored per
+// tile, so each tile of a qualifying group is its own feature.
 registerInstruction({
   deal(){
+    const details = board =>
+      findTypeGroups(board)
+        .filter(g => g.type === "lake" && g.cells.length >= 3)
+        .flatMap(g => groupCellIndices(g).map(index => ({cells: [index], pts: 2})));
     return {
       name: "Reservoirs",
       desc: `2 points per tile in every ${chipHtml("lake")} group of 3 or more tiles.`,
-      score(board){
-        return 2 * findTypeGroups(board)
-          .filter(g => g.type === "lake" && g.cells.length >= 3)
-          .reduce((sum, g) => sum + g.cells.length, 0);
-      }
+      details,
+      score: board => scoreFromDetails(details(board)),
     };
   }
 });

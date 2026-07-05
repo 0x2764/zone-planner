@@ -4,14 +4,15 @@
 registerInstruction({
   deal(){
     const targetType = randomItem(TYPES).id;
+    const details = board =>
+      findTypeGroups(board)
+        .filter(g => g.type === targetType)
+        .map(g => ({cells: groupCellIndices(g), pts: 8}));
     return {
       name: "Homesteads",
       desc: `8 points per ${chipHtml(targetType)} shape with no ${TYPE_NAME[targetType]} neighbours.`,
-      score(board){
-        return 8 * findTypeGroups(board)
-          .filter(g => g.type === targetType)
-          .length;
-      }
+      details,
+      score: board => scoreFromDetails(details(board)),
     };
   }
 });

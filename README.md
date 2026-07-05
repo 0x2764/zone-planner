@@ -11,11 +11,12 @@ Play it online — every push to `main` is published to **GitHub Pages** (see th
 The game is written as small, focused source fragments under `src/` and compiled into the self-contained `dist/` files by a zero-dependency Node script:
 
 ```
-node build.js          # build dist/zone-planner.html + dist/zone-planner.tests.html
+node build.js          # build dist/zone-planner.html + dist/zone-planner.fx.html + dist/zone-planner.tests.html
 node build.js --test    # build, then run the test suite headlessly (non-zero exit on failure)
 ```
 
 - **Add a scoring instruction** — drop a file in `src/instructions/` that calls `registerInstruction({ deal() { … } })`. The build globs it in automatically.
+- **Tune the season-tally animation** — open `dist/zone-planner.fx.html`, the FX/QA sandbox: slow the fx clock ×10/×100/×1000, pause with Space, step beats with `n`, replay the last tally with `r`, and auto-deal to the next season end with `a`. An overlay shows which beat is playing.
 - **Add an improvement type** — add one entry to the `TYPES` array in `src/game/types.js`; every derived table and consumer follows.
 
 `src/game/*` are plain-script fragments sharing one global scope (no import/export); `build.js` concatenates them in dependency order and inlines the result plus `src/styles.css` into the shippable HTML. `dist/` is generated and git-ignored — run `node build.js` to produce it locally; CI builds it fresh and deploys it to GitHub Pages.

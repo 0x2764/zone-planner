@@ -4,14 +4,18 @@
 registerInstruction({
   deal(){
     const targetType = randomItem(TYPES).id;
+    const details = board => {
+      const bigGroups = findTypeGroups(board).filter(g => g.type === targetType);
+      if(bigGroups.length === 0) return [];
+      const biggest = bigGroups.reduce((best, g) =>
+        g.cells.length > best.cells.length ? g : best);
+      return [{cells: groupCellIndices(biggest), pts: 2 * biggest.cells.length}];
+    };
     return {
       name: TYPE_GROUP_NAME[targetType],
       desc: `2 points per tile in your single largest ${chipHtml(targetType)} group.`,
-      score(board){
-        const bigGroups = findTypeGroups(board).filter(g => g.type === targetType);
-        if(bigGroups.length === 0) return 0;
-        return 2 * Math.max(...bigGroups.map(g => g.cells.length));
-      }
+      details,
+      score: board => scoreFromDetails(details(board)),
     };
   }
 });

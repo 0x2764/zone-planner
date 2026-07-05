@@ -98,7 +98,10 @@ function renderBoard(){
  *   future  — instructions visible with live projected scores (no hover delta)
  */
 function renderPlan(){
-  const csi = currentSeasonIndex();
+  // While the season tally is playing, the just-banked season still renders
+  // as "current" with its scores at 0 — the fx layer counts them up and the
+  // banked stamp lands when the animation clears fxSeasonIndex.
+  const csi = fxSeasonIndex !== -1 ? fxSeasonIndex : currentSeasonIndex();
 
   // Score the "+n" delta only once the draw has resolved to a single placement.
   const resolved = candidatePlacements.length === 1 ? candidatePlacements[0] : null;
@@ -112,19 +115,24 @@ function renderPlan(){
   let hypotheticalDelta = 0;
 
   document.getElementById("plan").innerHTML = SEASONS.map((season, s) => {
-    const isBanked = s < bankedSeasons.length;
+    const isTallying = s === fxSeasonIndex;
+    const isBanked = s < bankedSeasons.length && !isTallying;
     const isCurrent = !isGameOver && s === csi;
-    const cls = isBanked ? "past" : (isCurrent ? "current" : "future");
+    const cls = isBanked ? "past" : (isTallying ? "tallying" : (isCurrent ? "current" : "future"));
 
     const headRight = isBanked
       ? `<span class="stamp">✓ banked ${bankedSeasons[s].subtotal}</span>`
-      : (isCurrent
-          ? `build ${turnWithinSeason()} of ${season.turns}`
-          : `${season.turns} builds`);
+      : (isTallying
+          ? `scoring…`
+          : (isCurrent
+              ? `build ${turnWithinSeason()} of ${season.turns}`
+              : `${season.turns} builds`));
 
     const instrHtml = seasonPlans[s].map((instr, i) => {
       let ptsHtml;
-      if(isBanked){
+      if(isTallying){
+        ptsHtml = `<span class="ipts" id="ipts-${s}-${i}">0</span>`;
+      } else if(isBanked){
         ptsHtml = `<span class="ipts banked">${bankedSeasons[s].lines[i].pts}</span>`;
       } else if(isCurrent){
         const currentPoints = instr.score(board);
@@ -155,18 +163,62 @@ function renderPlan(){
     </div>`;
   }).join("");
 
-  // Total = banked points + the current season's live score.
-  const bankedTotal = bankedSeasons.reduce((sum, b) => sum + b.subtotal, 0);
+  // Total = banked points + the current season's live score. A season mid-
+  // tally is left out — the fx layer ticks it into the total as it counts.
+  const bankedTotal = bankedSeasons.reduce((sum, b, s) =>
+    s === fxSeasonIndex ? sum : sum + b.subtotal, 0);
   const totalDeltaHtml = hypotheticalDelta > 0
     ? `<span class="delta">+${hypotheticalDelta}</span>` : "";
   document.getElementById("total").innerHTML =
     (bankedTotal + liveCurrentSeasonTotal) + totalDeltaHtml;
 }
 
+/** The card's mini preview row (shape thumbnail + name + type), sized to its
+ *  bounding box. Shared by the live build panel and the tally's "Season review". */
+function improvementCardHtml(card){
+  const height = Math.max(...card.cells.map(c => c.row)) + 1;
+  const width  = Math.max(...card.cells.map(c => c.col)) + 1;
+  const cellPixels = Math.floor(72 / Math.max(height, width));
+  const occupied = new Set(card.cells.map(c => c.row + "," + c.col));
+
+  let miniCells = "";
+  for(let row = 0; row < height; row++){
+    for(let col = 0; col < width; col++){
+      const filled = occupied.has(row + "," + col);
+      miniCells += `<div style="${filled ? `background:${TYPE_HEX[card.type]}` : ""}"></div>`;
+    }
+  }
+
+  return `<div class="build-row">
+      <div class="build-shape">
+        <div class="mini" style="grid-template-rows:repeat(${height},${cellPixels}px);
+                                 grid-template-columns:repeat(${width},${cellPixels}px)">
+          ${miniCells}
+        </div>
+      </div>
+      <div class="build-info">
+        <div class="build-name">${card.name}</div>
+        <div class="build-type">${chipHtml(card.type)} · ${card.cells.length} tile${card.cells.length > 1 ? "s" : ""}</div>
+      </div>
+    </div>`;
+}
+
 /** The "This turn's build" panel: the current card, or the grant picker. */
 function renderBuild(){
   const buildElement = document.getElementById("build");
   const turnlineElement = document.getElementById("turnline");
+  const titleElement = document.getElementById("buildTitle");
+  titleElement.textContent = "This turn's build";
+
+  if(fxSeasonIndex !== -1){
+    titleElement.textContent = "Season review";
+    buildElement.innerHTML = lastPlacedCard
+      ? improvementCardHtml(lastPlacedCard)
+      : `<div class="grant-msg">The mayor tallies the ${SEASONS[fxSeasonIndex].name.toLowerCase()} plan…</div>`;
+    turnlineElement.textContent = "tap anywhere to skip";
+    document.getElementById("undoBtn").disabled = true;
+    return;
+  }
 
   if(isGameOver){
     buildElement.innerHTML =
@@ -186,33 +238,7 @@ function renderBuild(){
     buildElement.querySelectorAll("[data-grant]").forEach(btn =>
       btn.addEventListener("click", () => chooseGrantType(btn.dataset.grant)));
   } else {
-    // Mini preview of the card, sized to its bounding box.
-    const height = Math.max(...currentCard.cells.map(c => c.row)) + 1;
-    const width  = Math.max(...currentCard.cells.map(c => c.col)) + 1;
-    const cellPixels = Math.floor(72 / Math.max(height, width));
-    const occupied = new Set(currentCard.cells.map(c => c.row + "," + c.col));
-
-    let miniCells = "";
-    for(let row = 0; row < height; row++){
-      for(let col = 0; col < width; col++){
-        const filled = occupied.has(row + "," + col);
-        miniCells += `<div style="${filled ? `background:${TYPE_HEX[currentCard.type]}` : ""}"></div>`;
-      }
-    }
-
-    buildElement.innerHTML =
-      `<div class="build-row">
-        <div class="build-shape">
-          <div class="mini" style="grid-template-rows:repeat(${height},${cellPixels}px);
-                                   grid-template-columns:repeat(${width},${cellPixels}px)">
-            ${miniCells}
-          </div>
-        </div>
-        <div class="build-info">
-          <div class="build-name">${currentCard.name}</div>
-          <div class="build-type">${chipHtml(currentCard.type)} · ${currentCard.cells.length} tile${currentCard.cells.length > 1 ? "s" : ""}</div>
-        </div>
-      </div>`;
+    buildElement.innerHTML = improvementCardHtml(currentCard);
   }
 
   const s = currentSeasonIndex();

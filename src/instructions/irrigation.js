@@ -1,24 +1,28 @@
-// Irrigation: farms next to water.
+// Irrigation: farms next to water. Each farm–lake edge is one feature,
+// naming both banks of the edge.
 registerInstruction({
   deal(){
-    return {
-      name: "Irrigation",
-      desc: `2 points for every edge where a ${chipHtml("farm")} touches a ${chipHtml("lake")}.`,
-      score(board){
-        let points = 0;
-        for(let row = 0; row < GRID_SIZE; row++){
-          for(let col = 0; col < GRID_SIZE; col++){
-            if(board[cellIndex(row, col)] !== "farm") continue;
-            for(const [dr, dc] of ORTHOGONAL_NEIGHBOURS){
-              const nr = row + dr, nc = col + dc;
-              if(isInsideGrid(nr, nc) && board[cellIndex(nr, nc)] === "lake") {
-                points = points + 2;
-              }
+    const details = board => {
+      const features = [];
+      for(let row = 0; row < GRID_SIZE; row++){
+        for(let col = 0; col < GRID_SIZE; col++){
+          const farmIndex = cellIndex(row, col);
+          if(board[farmIndex] !== "farm") continue;
+          for(const [dr, dc] of ORTHOGONAL_NEIGHBOURS){
+            const nr = row + dr, nc = col + dc;
+            if(isInsideGrid(nr, nc) && board[cellIndex(nr, nc)] === "lake"){
+              features.push({cells: [farmIndex, cellIndex(nr, nc)], pts: 2});
             }
           }
         }
-        return points;
       }
+      return features;
+    };
+    return {
+      name: "Irrigation",
+      desc: `2 points for every edge where a ${chipHtml("farm")} touches a ${chipHtml("lake")}.`,
+      details,
+      score: board => scoreFromDetails(details(board)),
     };
   }
 });

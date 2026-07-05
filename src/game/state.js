@@ -10,12 +10,14 @@ let board;            // 121 slots: null | "mountain" | type id
 let deck;             // the year's 20 improvement cards (never mutated)
 let turnIndex;        // how many builds have been placed (0..20)
 let currentCard;      // the card in hand (a clone, so rotation is safe)
+let lastPlacedCard;   // the just-placed card, kept on show during the tally
 let grantPending;     // true when the dealt card fits nowhere
 let seasonPlans;      // [ [instr, instr], x4 ] — dealt at game start
 let bankedSeasons;    // [{lines:[{name,pts}], subtotal}] in season order
 let undoHistory;
 let tilesPlacedCount;
 let isGameOver;
+let fxSeasonIndex = -1;  // season being replayed by the scoring tally, -1 when idle
 
 // Tap-to-draw placement. `allPlacements` is every valid placement of the
 // current card; each tap on a cell constrains the working set down to the
@@ -50,6 +52,7 @@ function turnWithinSeason(){
 
 /** Reset everything and start a fresh year. */
 function newGame(){
+  cancelSeasonScoring();
   board = new Array(GRID_SIZE * GRID_SIZE).fill(null);
   for(const [row, col] of generateMountainCells()){
     board[cellIndex(row, col)] = MOUNTAIN;
@@ -101,7 +104,7 @@ function saveUndoSnapshot(){
 }
 
 function undoLastPlacement(){
-  if(undoHistory.length === 0 || isGameOver) return;
+  if(undoHistory.length === 0 || isGameOver || fxSeasonIndex !== -1) return;
   ({board, turnIndex, currentCard, grantPending,
     tilesPlacedCount, bankedSeasons} = undoHistory.pop());
   refreshPlacements();
@@ -128,15 +131,26 @@ function placeCurrentCard(placementCells){
   tilesPlacedCount += placementCells.length;
   turnIndex++;
 
-  // Did that placement close out a season?
+  // Did that placement close out a season? Bank it immediately (state
+  // stays correct even headlessly), then pause play while the tally
+  // animation replays the result before the year moves on.
   const seasonJustEnded = SEASON_END.indexOf(turnIndex);
-  if(seasonJustEnded !== -1) bankSeason(seasonJustEnded);
-
-  if(turnIndex >= TOTAL_TURNS){
-    finishGame();
-  } else {
-    startTurn();
+  if(seasonJustEnded !== -1){
+    bankSeason(seasonJustEnded);
+    lastPlacedCard = currentCard;     // keep the piece on show during the tally
+    currentCard = null;               // nothing in hand during the tally
+    fxSeasonIndex = seasonJustEnded;
+    refreshPlacements();
+    renderAll();
+    playSeasonScoring(seasonJustEnded, () => {
+      if(turnIndex >= TOTAL_TURNS) finishGame();
+      else startTurn();
+      renderAll();
+    });
+    return;
   }
+
+  startTurn();
   renderAll();
 }
 

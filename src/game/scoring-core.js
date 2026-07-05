@@ -1,8 +1,12 @@
 /* =====================================================================
  * SCORING CORE — shared helpers and the instruction registry.
  *
- * Each instruction is { name, desc, score(board) } where score is a
- * pure function of the board. Mountains count as FILLED for row
+ * Each instruction is { name, desc, details(board), score(board) }, both
+ * pure functions of the board. `details` lists the scored FEATURES —
+ * [{cells: [cellIndex, ...], pts}, ...], one entry per filled row, 2×2
+ * district, homestead group, farm–lake edge, qualifying tile... — and
+ * `score` is their sum (the end-of-season tally animation flies kudos
+ * off the feature cells). Mountains count as FILLED for row
  * completion, but they are never part of any improvement: group
  * finding, adjacency and type counts all skip them.
  *
@@ -16,10 +20,16 @@
 const INSTRUCTION_TEMPLATES = [];
 
 /** Register one instruction template. `template.deal()` returns a concrete
- *  instruction ({name, desc, score}) with any random target locked in. */
+ *  instruction ({name, desc, details, score}) with any random target locked in. */
 function registerInstruction(template){
   INSTRUCTION_TEMPLATES.push(template);
 }
+
+/** Sum a details list — [{cells, pts}, ...] — into a score. */
+const scoreFromDetails = details => details.reduce((sum, d) => sum + d.pts, 0);
+
+/** Flat cell indices of a findTypeGroups group. */
+const groupCellIndices = group => group.cells.map(([row, col]) => cellIndex(row, col));
 
 /** Flood fill: contiguous same-type improvement groups (mountains excluded). */
 function findTypeGroups(board){
@@ -56,9 +66,9 @@ function findTypeGroups(board){
 const chipHtml = typeId =>
   `<span class="chip" style="background:${TYPE_HEX[typeId]}"></span>${TYPE_NAME[typeId]}`;
 
-/** Count tiles of `typeId` that have at least one neighbour passing `test`. */
-function countTilesWithNeighbour(board, typeId, test){
-  let count = 0;
+/** Cell indices of `typeId` tiles with at least one neighbour passing `test`. */
+function tilesWithNeighbour(board, typeId, test){
+  const indices = [];
   for(let row = 0; row < GRID_SIZE; row++){
     for(let col = 0; col < GRID_SIZE; col++){
       if(board[cellIndex(row, col)] !== typeId) continue;
@@ -66,8 +76,12 @@ function countTilesWithNeighbour(board, typeId, test){
         const nr = row + dr, nc = col + dc;
         return isInsideGrid(nr, nc) && test(board[cellIndex(nr, nc)]);
       });
-      if(hasIt) count++;
+      if(hasIt) indices.push(cellIndex(row, col));
     }
   }
-  return count;
+  return indices;
 }
+
+/** Count tiles of `typeId` that have at least one neighbour passing `test`. */
+const countTilesWithNeighbour = (board, typeId, test) =>
+  tilesWithNeighbour(board, typeId, test).length;

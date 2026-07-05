@@ -9,7 +9,8 @@
  *  order and inlines the result (plus the CSS) into self-contained,
  *  shippable HTML in dist/.
  *
- *    node build.js          build dist/zone-planner.html
+ *    node build.js          build dist/zone-planner.html,
+ *                                 dist/zone-planner.fx.html (QA sandbox)
  *                                 and dist/zone-planner.tests.html
  *    node build.js --test   build, then run the test suite headlessly
  *                           (exits non-zero on any failure — CI-friendly)
@@ -39,7 +40,7 @@ const GAME_HEAD = [
   "constants.js", "types.js", "shapes.js", "utils.js",
   "cards.js", "mountains.js", "scoring-core.js",
 ];
-const GAME_TAIL = ["state.js", "render.js", "boot.js"];
+const GAME_TAIL = ["state.js", "render.js", "fx.js", "boot.js"];
 
 const read = p => fs.readFileSync(p, "utf8");
 
@@ -66,25 +67,32 @@ function buildGameJs(){
 const inline = (template, marker, content) =>
   template.replace(marker, () => content);
 
-/** Build both self-contained HTML files. Returns the concatenated sources. */
+/** Build the self-contained HTML files. Returns the concatenated sources. */
 function build(){
   const gameJs = buildGameJs();
   const css = read(path.join(SRC, "styles.css"));
   const testsJs = read(path.join(TESTS_DIR, "zone-planner.tests.js"));
+  // The FX sandbox: the same game plus the QA harness appended.
+  const fxJs = `${gameJs}\n${read(path.join(SRC, "fx-sandbox.js"))}`;
 
   fs.mkdirSync(DIST, { recursive: true });
 
+  const template = read(path.join(SRC, "template.html"));
+
   const gameHtml = inline(
-    inline(read(path.join(SRC, "template.html")), "{{STYLES}}", css),
-    "{{GAME_JS}}", gameJs);
+    inline(template, "{{STYLES}}", css), "{{GAME_JS}}", gameJs);
   fs.writeFileSync(path.join(DIST, "zone-planner.html"), gameHtml);
+
+  const fxHtml = inline(
+    inline(template, "{{STYLES}}", css), "{{GAME_JS}}", fxJs);
+  fs.writeFileSync(path.join(DIST, "zone-planner.fx.html"), fxHtml);
 
   const testHtml = inline(
     inline(read(path.join(TESTS_DIR, "template.html")), "{{GAME_JS}}", gameJs),
     "{{TESTS_JS}}", testsJs);
   fs.writeFileSync(path.join(DIST, "zone-planner.tests.html"), testHtml);
 
-  return { gameJs, testsJs };
+  return { gameJs, testsJs, fxJs };
 }
 
 /**
@@ -94,7 +102,11 @@ function build(){
  * guards its DOM rendering, so it runs unmodified here.
  */
 function runTests(){
-  const { gameJs, testsJs } = build();
+  const { gameJs, testsJs, fxJs } = build();
+
+  // The sandbox harness can't run headlessly (it needs #board), but a
+  // syntax error in it should still fail CI — compile without executing.
+  new vm.Script(fxJs, { filename: "zone-planner.fx.bundle.js" });
 
   let pageTitle = "";
   const sandbox = {
@@ -116,5 +128,5 @@ if(process.argv.includes("--test")){
   process.exit(runTests() ? 0 : 1);
 } else {
   build();
-  console.log("Built dist/zone-planner.html and dist/zone-planner.tests.html");
+  console.log("Built dist/zone-planner.html, dist/zone-planner.fx.html and dist/zone-planner.tests.html");
 }

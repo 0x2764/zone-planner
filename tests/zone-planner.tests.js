@@ -431,6 +431,112 @@ test("Largest-group instruction scores 2 per tile in the biggest target group", 
 });
 
 /* =====================================================================
+ * SCORING DETAILS — the per-feature breakdown behind the tally animation
+ * ===================================================================== */
+
+/** Assert details() is well-formed and its points sum to score(). */
+function assertDetailsConsistent(instruction, board, message){
+  const details = instruction.details(board);
+  for(const feature of details){
+    assert(feature.pts > 0, `${message} — every feature scores points`);
+    assert(feature.cells.length > 0, `${message} — every feature names its cells`);
+  }
+  assertEqual(scoreFromDetails(details), instruction.score(board),
+    `${message} — details sum to score`);
+  return details;
+}
+
+test("Irrigation details: one feature per farm–lake edge, both banks named", () => {
+  const board = emptyBoard();
+  set(board, 5, 5, "farm");
+  set(board, 5, 4, "lake"); set(board, 5, 6, "lake"); set(board, 4, 5, "lake");
+  const details = assertDetailsConsistent(dealByName("Irrigation"), board, "irrigation");
+  assertEqual(details.length, 3);
+  for(const feature of details){
+    assertEqual(feature.pts, 2);
+    assert(feature.cells.includes(cellIndex(5, 5)), "the farm is in every edge feature");
+  }
+});
+
+test("Greenbelt details: one 1-point feature per edge forest tile", () => {
+  const board = emptyBoard();
+  set(board, 0, 0, "forest"); set(board, 0, 5, "forest"); set(board, 5, 5, "forest");
+  const details = assertDetailsConsistent(dealByName("Greenbelt"), board, "greenbelt");
+  assertEqual(details.length, 2);
+  assertDeepEqual(details.flatMap(f => f.cells).sort((a, b) => a - b),
+    [cellIndex(0, 0), cellIndex(0, 5)]);
+});
+
+test("Districts details: each overlapping 2×2 is its own 3-point feature", () => {
+  const board = emptyBoard();
+  for(let r = 0; r < 3; r++) for(let c = 0; c < 3; c++) set(board, r, c, "farm");
+  const details = assertDetailsConsistent(dealByName("Districts"), board, "districts");
+  assertEqual(details.length, 4);
+  for(const feature of details) assertEqual(feature.cells.length, 4);
+});
+
+test("Through Streets details include the mountain that completed the row", () => {
+  const board = emptyBoard();
+  for(let c = 0; c < GRID_SIZE; c++) set(board, 3, c, "city");
+  set(board, 3, 5, MOUNTAIN);
+  const details = assertDetailsConsistent(dealByName("Through Streets"), board, "through streets");
+  assertEqual(details.length, 1);
+  assertEqual(details[0].cells.length, GRID_SIZE);
+  assert(details[0].cells.includes(cellIndex(3, 5)), "the mountain helped fill the row");
+});
+
+test("Mixed Use details name only the improvement tiles in the row", () => {
+  const board = emptyBoard();
+  set(board, 0, 0, "farm"); set(board, 0, 1, "lake"); set(board, 0, 2, "forest");
+  set(board, 0, 3, MOUNTAIN);
+  const details = assertDetailsConsistent(dealByName("Mixed Use"), board, "mixed use");
+  assertEqual(details.length, 1);
+  assertEqual(details[0].cells.length, 3, "the mountain is not an improvement");
+});
+
+test("Largest-group details: one feature, the biggest group's tiles", () => {
+  const instruction = dealByName("Bread Basket", 0); // target = farm
+  const board = emptyBoard();
+  set(board, 0, 0, "farm"); set(board, 0, 1, "farm");
+  set(board, 1, 0, "farm"); set(board, 1, 1, "farm");  // a 4-tile group
+  set(board, 9, 9, "farm"); set(board, 9, 10, "farm"); // a 2-tile group
+  const details = assertDetailsConsistent(instruction, board, "largest group");
+  assertEqual(details.length, 1);
+  assertEqual(details[0].cells.length, 4);
+  assertEqual(details[0].pts, 8);
+  assertDeepEqual(instruction.details(emptyBoard()), [], "no group, no features");
+});
+
+test("Homesteads details: one 8-point feature per shape", () => {
+  const instruction = dealByName("Homesteads", 0); // target = farm
+  const board = emptyBoard();
+  set(board, 0, 0, "farm"); set(board, 10, 10, "farm");
+  set(board, 3, 3, "farm"); set(board, 3, 4, "farm");
+  const details = assertDetailsConsistent(instruction, board, "homesteads");
+  assertEqual(details.length, 3);
+  assert(details.every(f => f.pts === 8), "8 points per shape, whatever its size");
+});
+
+test("every instruction's details sum to its score on a busy board", () => {
+  const board = emptyBoard();
+  // A bit of everything: a full mixed row, a lake blob, a city district,
+  // farms round a mountain, forest on the bottom edge.
+  for(let c = 0; c < GRID_SIZE; c++) set(board, 0, c, ["farm", "lake", "forest", "city"][c % 4]);
+  set(board, 5, 5, MOUNTAIN);
+  set(board, 5, 4, "farm"); set(board, 4, 5, "farm"); set(board, 5, 6, "lake");
+  set(board, 6, 5, "lake"); set(board, 6, 6, "lake"); set(board, 7, 6, "lake");
+  set(board, 2, 2, "city"); set(board, 2, 3, "city");
+  set(board, 3, 2, "city"); set(board, 3, 3, "city");
+  set(board, 10, 0, "forest"); set(board, 10, 1, "forest");
+  for(const template of INSTRUCTION_TEMPLATES){
+    for(const randomValue of [0, .3, .6, .9]){
+      const instruction = withMockedRandom(randomValue, () => template.deal());
+      assertDetailsConsistent(instruction, board, instruction.name);
+    }
+  }
+});
+
+/* =====================================================================
  * REPORTING
  * ===================================================================== */
 

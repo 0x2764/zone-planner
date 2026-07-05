@@ -11,6 +11,7 @@
     --espresso: #33241A; /* mountain fill */
     --paper-white: #F6F0E1;
     --radius: 10px;
+    --honey: #FFB224; /* scoring & kudos */
 }
 
 * {
@@ -220,7 +221,69 @@ button:disabled {
    brighter outline to cue the confirm. Placed after `.cell.selected` so this
    box-shadow wins by source order on the tiles that carry both classes. */
 .cell.ghost {
-    box-shadow: inset 0 0 0 3px #FFB224
+    box-shadow: inset 0 0 0 3px var(--honey)
+}
+
+/* ---------- season scoring tally ---------- */
+
+/* Cells that earned points pulse gold while their instruction tallies.
+   All tally durations scale with --fx-scale, which stays 1 in the shipped
+   game; the FX sandbox build turns it up to slow the animation down. */
+.cell.scored {
+    box-shadow: inset 0 0 0 4px var(--glaze);
+    animation: scored-pulse calc(3s * var(--fx-scale, 1)) ease-out;
+}
+
+@keyframes scored-pulse {
+    0% { filter: brightness(1) }
+    35% { filter: brightness(1.3) }
+    100% { filter: brightness(1) }
+}
+
+/* A "+n" (or wordless spark) floating up off a scored tile. */
+.kudo {
+    position: fixed;
+    z-index: 20;
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--gold);
+    text-shadow: 0 1px 0 var(--paper-white), 0 0 6px var(--paper-white);
+    pointer-events: none;
+    animation: kudo-rise calc(3s * var(--fx-scale, 1)) linear both;
+}
+
+.kudo.spark {
+    font-size: 1rem;
+    color: var(--muted);
+}
+
+@keyframes kudo-rise {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(.5) }
+    18% { opacity: 1; transform: translate(-50%, -70%) scale(1) }
+    82% { opacity: 1; transform: translate(-50%, -300%) scale(1) }
+    100% { opacity: 0; transform: translate(calc(-50% + var(--drift, 0px)), -400%) scale(1) }
+}
+
+/* The banked-stamp ploof: a small burst that pops up, drifts and falls. */
+.confetti {
+    position: fixed;
+    z-index: 20;
+    border-radius: 1px;
+    pointer-events: none;
+    animation: confetti-ploof calc(2s * var(--fx-scale, 1)) ease-out both;
+}
+
+@keyframes confetti-ploof {
+    0% { opacity: 1; transform: translate(0, 0) rotate(0deg) }
+    55% { opacity: 1; transform: translate(calc(var(--dx) * .75), var(--pop)) rotate(calc(var(--spin) * .6)) }
+    100% { opacity: 0; transform: translate(var(--dx), var(--fall)) rotate(var(--spin)) }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .cell.scored, .kudo, .confetti {
+        animation: none
+    }
 }
 
 .hint {
@@ -278,6 +341,11 @@ button:disabled {
 .season.current {
     border-color: var(--gold);
     box-shadow: 0 0 0 1px var(--gold)
+}
+
+.season.tallying {
+    border-color: var(--honey);
+    box-shadow: 0 0 0 1px var(--honey)
 }
 
 .season-head {
