@@ -22,6 +22,11 @@ const FX_BEAT_INSTR = 3000;   // one instruction: pulse + kudos + count-up
 const FX_BEAT_ZERO  = 1000;   // a 0-point instruction just holds its 0
 const FX_BEAT_STAMP = 2000;   // banked stamp + confetti ploof
 
+const FX_KUDO_HOLD       = 1500;  // coins rest on their tiles before sweeping
+const FX_SWEEP_STAGGER   = 45;    // ms between successive coins launching
+const FX_SWEEP_STAGGER_CAP = 900; // cap so a big feature's last coin still lands
+                                  // inside the FX_BEAT_INSTR beat
+
 const fxClock = { scale: 1, paused: false };
 
 let fxTimers = [];        // pending beats: {fn, id, end} live, {fn, remaining} paused
@@ -186,6 +191,7 @@ function playInstructionBeat(seasonIdx, i, features, pts, totalBase){
   // tile nearest the feature's centre carries the full +pts and the rest
   // are wordless sparks — numbers on screen always sum to the real score.
   let k = 0;
+  const coins = [];
   for(const feature of features){
     const perTile = feature.pts / feature.cells.length;
     const labelled = Number.isInteger(perTile) ? null : nearestToCentroid(feature.cells);
@@ -193,10 +199,13 @@ function playInstructionBeat(seasonIdx, i, features, pts, totalBase){
       const isSpark = labelled !== null && index !== labelled;
       const text = labelled === null ? `+${perTile}`
                  : (isSpark ? "✦" : `+${feature.pts}`);
-      spawnKudo(index, text, Math.min(k * 18, 320), isSpark);
+      coins.push({ el: spawnKudo(index, text, Math.min(k * 18, 320), isSpark), index });
       k++;
     }
   }
+
+  // After a beat resting on their tiles, the coins sweep into the score box.
+  fxDelay(() => sweepKudosToTotal(coins), FX_KUDO_HOLD);
 
   fxCountUp(document.getElementById(`ipts-${seasonIdx}-${i}`),
             document.getElementById("total"),
@@ -216,7 +225,9 @@ function nearestToCentroid(cellIndices){
   return best;
 }
 
-/** A floating "+n" (or spark) rising off one board cell. */
+/** A "+n" coin (or spark) that pops onto one board cell and rests there.
+ *  It settles in place and holds until sweepKudosToTotal flies it away (or
+ *  fxCleanup sweeps it at tally end). Returns the element. */
 function spawnKudo(cellIdx, text, delayMs, isSpark){
   const rect = boardElement.children[cellIdx].getBoundingClientRect();
   const el = document.createElement("span");
@@ -225,10 +236,31 @@ function spawnKudo(cellIdx, text, delayMs, isSpark){
   el.style.left = `${rect.left + rect.width / 2}px`;
   el.style.top = `${rect.top + rect.height / 2}px`;
   el.style.animationDelay = `${delayMs * fxClock.scale}ms`;
-  el.style.setProperty("--drift", `${(Math.random() * 18 - 9).toFixed(1)}px`);
-  el.addEventListener("animationend", () => el.remove());
   document.body.appendChild(el);
   fxNodes.push(el);
+  return el;
+}
+
+/** Fly the beat's coins into the "Total score" box, rapid-fire and ordered
+ *  top-left → bottom-right (ascending cell index). Each coin translates from
+ *  where it rests to the box's centre and removes itself on arrival. */
+function sweepKudosToTotal(coins){
+  const totalEl = document.getElementById("total");
+  if(!totalEl) return;
+  const target = totalEl.getBoundingClientRect();
+  const tx = target.left + target.width / 2;
+  const ty = target.top + target.height / 2;
+
+  [...coins].sort((a, b) => a.index - b.index).forEach(({ el }, rank) => {
+    const restX = parseFloat(el.style.left);
+    const restY = parseFloat(el.style.top);
+    el.style.setProperty("--sweep-dx", `${tx - restX}px`);
+    el.style.setProperty("--sweep-dy", `${ty - restY}px`);
+    el.style.animationDelay =
+      `${Math.min(rank * FX_SWEEP_STAGGER, FX_SWEEP_STAGGER_CAP) * fxClock.scale}ms`;
+    el.addEventListener("animationend", () => el.remove());
+    el.classList.add("sweeping");
+  });
 }
 
 /** Count a plan line up from 0 to pts, ticking the grand total along.
@@ -253,19 +285,25 @@ function fxCountUp(lineEl, totalEl, totalBase, pts, duration){
  *  Pieces clean themselves up, so they may drift on past the tally. */
 function ploofConfetti(seasonIdx){
   const seasonEl = document.getElementById("plan").children[seasonIdx];
-  const anchor = (seasonEl || boardElement).getBoundingClientRect();
+  // Burst from just above the surveyor's tick — the "✓ banked" stamp on the
+  // card's right edge — falling back to the card or board if it isn't there.
+  const stampEl = seasonEl && seasonEl.querySelector(".stamp");
+  const anchor = (stampEl || seasonEl || boardElement).getBoundingClientRect();
+  const originX = anchor.left + anchor.width / 2;
+  const originY = anchor.top - 2;
   const colours = [...TYPES.map(t => t.hex), "#9A6A1C"];
+  const S = 1.25;   // a burst a quarter bigger than the original ploof
   for(let i = 0; i < 26; i++){
     const el = document.createElement("span");
     el.className = "confetti";
-    el.style.left = `${anchor.left + anchor.width / 2}px`;
-    el.style.top = `${anchor.top + 10}px`;
+    el.style.left = `${originX}px`;
+    el.style.top = `${originY}px`;
     el.style.background = randomItem(colours);
-    el.style.width = `${4 + Math.random() * 4}px`;
-    el.style.height = `${6 + Math.random() * 4}px`;
-    el.style.setProperty("--dx", `${Math.round(Math.random() * 140 - 70)}px`);
-    el.style.setProperty("--pop", `${Math.round(-30 - Math.random() * 40)}px`);
-    el.style.setProperty("--fall", `${Math.round(40 + Math.random() * 50)}px`);
+    el.style.width = `${(4 + Math.random() * 4) * S}px`;
+    el.style.height = `${(6 + Math.random() * 4) * S}px`;
+    el.style.setProperty("--dx", `${Math.round((Math.random() * 140 - 70) * S)}px`);
+    el.style.setProperty("--pop", `${Math.round((-30 - Math.random() * 40) * S)}px`);
+    el.style.setProperty("--fall", `${Math.round((40 + Math.random() * 50) * S)}px`);
     el.style.setProperty("--spin", `${Math.round(Math.random() * 540 - 270)}deg`);
     el.style.animationDelay = `${Math.floor(Math.random() * 90) * fxClock.scale}ms`;
     el.addEventListener("animationend", () => el.remove());

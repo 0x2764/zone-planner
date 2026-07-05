@@ -177,6 +177,12 @@ button:disabled {
     justify-content: center;
 }
 
+/* Per-type board colours: `.cell.farm { background-color: var(--farm) }` …,
+   plus the :root colour vars, generated from the TYPES table by build.js so
+   types.js stays the single source of truth. `background-color` (not the
+   shorthand) leaves room for the scored shimmer's `background-image`. */
+{{TYPE_STYLES}}
+
 @media (prefers-reduced-motion: reduce) {
     .cell {
         transition: none
@@ -230,39 +236,84 @@ button:disabled {
    All tally durations scale with --fx-scale, which stays 1 in the shipped
    game; the FX sandbox build turns it up to slow the animation down. */
 .cell.scored {
-    box-shadow: inset 0 0 0 4px var(--glaze);
-    animation: scored-pulse calc(3s * var(--fx-scale, 1)) ease-out;
+    background-image: linear-gradient(-45deg,
+        transparent 35%, rgba(255, 255, 255, .35) 50%, transparent 65%);
+    background-size: 200%;
+    animation: shimmer calc(1.1s * var(--fx-scale, 1)) linear infinite;
 }
 
-@keyframes scored-pulse {
-    0% { filter: brightness(1) }
-    35% { filter: brightness(1.3) }
-    100% { filter: brightness(1) }
+/* A diagonal light band sweeps across the tile — over each type's own
+   background-color, so it shivers in that type's colour. fx.js removes the
+   `scored` class when the beat ends, so `infinite` just stops there.
+
+   */
+@keyframes shimmer {
+    0%   { background-position: 100% 0; }
+    100% { background-position: -100% 0; }
 }
 
-/* A "+n" (or wordless spark) floating up off a scored tile. */
+/* A honey-gold coin (or wordless spark) resting on its scored tile.
+   The coin is a struck disc — domed metal with a rim — and its "+n" is
+   embossed: a bright top edge and dark under-shadow press it into the face.
+   It pops onto the tile and sits still until the tally-end sweep. */
 .kudo {
     position: fixed;
     z-index: 20;
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
     font-family: "IBM Plex Mono", monospace;
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--gold);
-    text-shadow: 0 1px 0 var(--paper-white), 0 0 6px var(--paper-white);
+    font-size: .8rem;
+    font-weight: 700;
+    color: #6E400A;
+    /* background: radial-gradient(circle at 38% 30%, #FFE08A, var(--honey) 52%, #C6851A 100%); */
+    background-color: var(--honey);
+    box-shadow:
+        0 0 0 1.5px #B0740F,                     /* struck rim */
+        inset 0 1.5px 2px rgba(255, 244, 200, .75), /* lit crown */
+        inset 0 -2px 3px rgba(120, 70, 10, .55),    /* under-curve shade */
+        0 2px 5px rgba(58, 46, 32, .35);            /* cast shadow */
+    text-shadow: 0 1px 0 rgba(255, 240, 190, .8), 0 -1px 1px rgba(120, 70, 10, .45);
     pointer-events: none;
-    animation: kudo-rise calc(3s * var(--fx-scale, 1)) linear both;
+    animation: kudo-pop calc(.5s * var(--fx-scale, 1)) ease-out both;
 }
 
+/* Filler tiles carry no number — just a bare sparkle, never a coin. */
 .kudo.spark {
+    display: none;
+    width: auto;
+    height: auto;
+    background: none;
+    box-shadow: none;
     font-size: 1rem;
-    color: var(--muted);
+    color: var(--honey);
+    text-shadow: 0 0 6px rgba(255, 178, 36, .85);
 }
 
-@keyframes kudo-rise {
-    0% { opacity: 0; transform: translate(-50%, -50%) scale(.5) }
-    18% { opacity: 1; transform: translate(-50%, -70%) scale(1) }
-    82% { opacity: 1; transform: translate(-50%, -300%) scale(1) }
-    100% { opacity: 0; transform: translate(calc(-50% + var(--drift, 0px)), -400%) scale(1) }
+/* Pop onto the tile with a slight overshoot, then settle and hold still. */
+@keyframes kudo-pop {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(.4); }
+    60% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+    100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+/* After resting, each coin flies into the "Total score" box and vanishes.
+   The sweep vector (--sweep-dx/dy) and per-coin launch delay are set inline;
+   this fresh animation replaces the long-finished kudo-pop. */
+.kudo.sweeping {
+    animation: kudo-sweep calc(.5s * var(--fx-scale, 1)) ease-in both;
+}
+
+@keyframes kudo-sweep {
+    0% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    100% {
+        opacity: 0;
+        transform: translate(
+            calc(-50% + var(--sweep-dx, 0px)),
+            calc(-50% + var(--sweep-dy, 0px))) scale(.45);
+    }
 }
 
 /* The banked-stamp ploof: a small burst that pops up, drifts and falls. */

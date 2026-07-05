@@ -52,6 +52,22 @@ function instructionFiles(){
     .map(name => path.join(INSTR_DIR, name));
 }
 
+/** Per-type board CSS, generated from the TYPES table so types.js stays the
+ *  single source of truth for improvement colours. Evaluates the (self-
+ *  contained) types.js fragment in a vm and reads back TYPES — the top-level
+ *  `const TYPES` isn't a sandbox property, so we surface it via `this`. */
+function typeStylesCss(){
+  const sandbox = {};
+  vm.createContext(sandbox);
+  vm.runInContext(
+    `${read(path.join(GAME_DIR, "types.js"))}\nthis.__TYPES = TYPES;`,
+    sandbox, { filename: "types.fragment.js" });
+  const types = sandbox.__TYPES;
+  const vars = types.map(t => `--${t.id}:${t.hex}`).join(";");
+  const rules = types.map(t => `.cell.${t.id}{background-color:var(--${t.id})}`).join("\n");
+  return `:root{${vars}}\n${rules}`;
+}
+
 /** Concatenate every fragment into one strict-mode script. */
 function buildGameJs(){
   const files = [
@@ -70,7 +86,7 @@ const inline = (template, marker, content) =>
 /** Build the self-contained HTML files. Returns the concatenated sources. */
 function build(){
   const gameJs = buildGameJs();
-  const css = read(path.join(SRC, "styles.css"));
+  const css = inline(read(path.join(SRC, "styles.css")), "{{TYPE_STYLES}}", typeStylesCss());
   const testsJs = read(path.join(TESTS_DIR, "zone-planner.tests.js"));
   // The FX sandbox: the same game plus the QA harness appended.
   const fxJs = `${gameJs}\n${read(path.join(SRC, "fx-sandbox.js"))}`;

@@ -58,8 +58,10 @@ function renderBoard(){
         cellDiv.style.background = "";
         cellDiv.textContent = "▲";
       } else {
-        cellDiv.className = "cell" + (value ? " filled" : "");
-        cellDiv.style.background = value ? TYPE_HEX[value] : "";
+        // Colour committed land via its type class (.cell.farm, …); clear any
+        // inline background a previous frame's ghost/possible preview left here.
+        cellDiv.className = "cell" + (value ? " filled " + value : "");
+        cellDiv.style.background = "";
         cellDiv.textContent = "";
       }
     }

@@ -16,7 +16,7 @@
 if(document.getElementById("board")){
   document.title += " — FX sandbox";
 
-  const FX_SCALES = { "1": 1, "2": 2, "3": 4, "4": 8 };
+  const FX_SCALES = { "1": 0.5, "2": 1, "3": 2, "4": 8 };
 
   /* ------------------------------ panel ----------------------------- */
 
