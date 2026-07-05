@@ -1,37 +1,8 @@
-:root {
-    --bg: #E9E0CA; /* oatmeal — old survey paper */
-    --panel: #F2EBD9;
-    --panel-2: #E3D8BE;
-    --cell: #DCCFB1; /* open land */
-    --line: #C3B28D; /* sepia rule */
-    --text: #3A2E20; /* ink */
-    --muted: #8B7A5C;
-    --gold: #9A6A1C; /* council brass, inked for paper */
-    --banked: #3E7A4E; /* surveyor's green stamp */
-    --espresso: #33241A; /* mountain fill */
-    --paper-white: #F6F0E1;
-    --radius: 10px;
-}
-
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0
-}
-
-html, body {
-    height: 100%
-}
-
-body {
-    background: radial-gradient(ellipse 120% 90% at 50% 0%, #F0E8D4, var(--bg) 70%);
-    color: var(--text);
-    font-family: "Space Grotesk", system-ui, sans-serif;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 20px 16px 40px;
-}
+/* =====================================================================
+ * DESKTOP LAYOUT — arrangement only. Theme, cell appearance, chip and the
+ * year-end modal come from the shared src/game/styles.css, concatenated
+ * ahead of this sheet at build time.
+ * ===================================================================== */
 
 header {
     width: 100%;
@@ -41,54 +12,6 @@ header {
     gap: 14px;
     flex-wrap: wrap;
     margin-bottom: 18px;
-}
-
-h1 {
-    font-size: 1.5rem;
-    letter-spacing: .14em;
-    font-weight: 700;
-    text-transform: uppercase
-}
-
-h1 .dot {
-    color: var(--gold)
-}
-
-.tagline {
-    font-family: "IBM Plex Mono", monospace;
-    font-size: .75rem;
-    color: var(--muted);
-    letter-spacing: .06em
-}
-
-.spacer {
-    flex: 1
-}
-
-button {
-    font-family: "IBM Plex Mono", monospace;
-    font-size: .75rem;
-    letter-spacing: .05em;
-    background: var(--panel-2);
-    color: var(--text);
-    border: 1px solid var(--line);
-    border-radius: 8px;
-    padding: 8px 14px;
-    cursor: pointer;
-}
-
-button:hover {
-    border-color: var(--muted)
-}
-
-button:focus-visible {
-    outline: 2px solid var(--gold);
-    outline-offset: 2px
-}
-
-button:disabled {
-    opacity: .4;
-    cursor: default
 }
 
 .layout {
@@ -162,56 +85,6 @@ button:disabled {
     touch-action: manipulation;
 }
 
-.cell {
-    background: var(--cell);
-    border-radius: 4px;
-    position: relative;
-    min-width: 0;
-    min-height: 0;
-    line-height: 1;
-    cursor: pointer;
-    transition: background-color .08s linear;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .cell {
-        transition: none
-    }
-}
-
-.cell.filled {
-    cursor: default
-}
-
-.cell.mountain {
-    background: var(--espresso);
-    cursor: default;
-    color: var(--paper-white);
-    font-size: clamp(.6rem, 2.6vw, 1rem);
-    user-select: none;
-}
-
-.cell.ghost {
-    opacity: .6
-}
-
-.cell.ghost-bad {
-    background: #D89B84 !important;
-    box-shadow: inset 0 0 0 2px #A8482C
-}
-
-.hint {
-    font-family: "IBM Plex Mono", monospace;
-    font-size: .7rem;
-    color: var(--muted);
-    margin-top: 10px;
-    letter-spacing: .04em;
-    text-align: center;
-}
-
 /* ---------- sidebar ---------- */
 .side {
     flex: 0 0 408px;
@@ -219,23 +92,6 @@ button:disabled {
     flex-direction: column;
     gap: 14px;
     width: 100%
-}
-
-.panel {
-    background: var(--panel);
-    border: 1px solid var(--line);
-    border-radius: var(--radius);
-    padding: 14px 16px;
-}
-
-.panel h2 {
-    font-family: "IBM Plex Mono", monospace;
-    font-size: .68rem;
-    font-weight: 500;
-    color: var(--muted);
-    letter-spacing: .18em;
-    text-transform: uppercase;
-    margin-bottom: 10px;
 }
 
 /* ---------- the mayor's plan (the four-season ledger) ---------- */
@@ -322,16 +178,6 @@ button:disabled {
     color: var(--banked);
     font-size: .75rem;
     margin-left: 4px
-}
-
-.chip {
-    display: inline-block;
-    width: .86em;
-    height: .86em;
-    border-radius: 0px;
-    vertical-align: baseline;
-    transform: translateY(1px);
-    margin-right: 3px;
 }
 
 /* ---------- this turn's build ---------- */
@@ -451,96 +297,4 @@ button:disabled {
     color: var(--banked);
     font-size: .95rem;
     margin-left: 6px
-}
-
-/* ---------- year-end review ---------- */
-.overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(45, 33, 22, .55);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 20px;
-    z-index: 10;
-}
-
-.overlay.hidden {
-    display: none
-}
-
-.modal {
-    background: var(--panel);
-    border: 1px solid var(--line);
-    border-radius: 14px;
-    padding: 28px 30px;
-    max-width: 440px;
-    width: 100%;
-    max-height: 90vh;
-    overflow: auto;
-}
-
-.modal h2 {
-    font-size: 1.1rem;
-    letter-spacing: .12em;
-    text-transform: uppercase;
-    margin-bottom: 4px
-}
-
-.modal .sub {
-    font-family: "IBM Plex Mono", monospace;
-    font-size: .72rem;
-    color: var(--muted);
-    margin-bottom: 18px
-}
-
-.modal .season-block {
-    margin-bottom: 12px
-}
-
-.modal .season-title {
-    display: flex;
-    justify-content: space-between;
-    font-family: "IBM Plex Mono", monospace;
-    font-size: .7rem;
-    letter-spacing: .16em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 3px;
-}
-
-.modal .season-title .pts {
-    color: var(--banked)
-}
-
-.modal .line {
-    display: flex;
-    justify-content: space-between;
-    font-size: .85rem;
-    padding: 5px 0 5px 12px;
-    border-bottom: 1px dashed var(--line);
-}
-
-.modal .line .pts {
-    font-family: "IBM Plex Mono", monospace;
-    color: var(--gold)
-}
-
-.modal .grand {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    margin: 16px 0 20px
-}
-
-.modal .grand .pts {
-    font-family: "IBM Plex Mono", monospace;
-    font-size: 2rem;
-    font-weight: 600;
-    color: var(--gold)
-}
-
-.modal button {
-    width: 100%;
-    padding: 12px
 }

@@ -188,6 +188,57 @@ test("cardFitsSomewhere respects the exact open space", () => {
 });
 
 /* =====================================================================
+ * PLACEMENT ENUMERATION (the mobile touch mechanic's shared logic)
+ * ===================================================================== */
+
+test("normalisedCellsKey is an order-independent, sorted signature", () => {
+  assertEqual(normalisedCellsKey([{row: 0, col: 1}, {row: 0, col: 0}]), "0,0 0,1");
+  assertEqual(
+    normalisedCellsKey([{row: 2, col: 0}, {row: 1, col: 3}]),
+    normalisedCellsKey([{row: 1, col: 3}, {row: 2, col: 0}]));
+});
+
+test("cardOrientations dedupes symmetric variants", () => {
+  assertEqual(cardOrientations(makeCard("farm", SHAPES.M1)).length, 1, "1×1 has one orientation");
+  assertEqual(cardOrientations(makeCard("lake", SHAPES.O4)).length, 1, "square O4 has one");
+  assertEqual(cardOrientations(makeCard("farm", SHAPES.I4)).length, 2, "I4 has horizontal + vertical");
+  assertEqual(cardOrientations(makeCard("forest", SHAPES.T4)).length, 4, "T4 has four");
+  assertEqual(cardOrientations(makeCard("city", SHAPES.L4)).length, 8, "L4 has all eight");
+});
+
+test("allValidPlacements counts every distinct on-board placement", () => {
+  const board = emptyBoard();
+  assertEqual(allValidPlacements(board, makeCard("farm", SHAPES.M1)).length, 121, "1×1: every cell");
+  assertEqual(allValidPlacements(board, makeCard("lake", SHAPES.O4)).length, 100, "O4: 10×10, dedupe of 4 identical rotations");
+  assertEqual(allValidPlacements(board, makeCard("farm", SHAPES.D2)).length, 220, "domino: 110 horizontal + 110 vertical");
+  assertEqual(allValidPlacements(board, makeCard("city", SHAPES.I4)).length, 176, "I4: 88 horizontal + 88 vertical");
+});
+
+test("allValidPlacements finds the single fit through a 2-cell gap", () => {
+  const board = new Array(GRID_SIZE * GRID_SIZE).fill("city");
+  set(board, 0, 0, null);
+  set(board, 0, 1, null);
+  const placements = allValidPlacements(board, makeCard("farm", SHAPES.D2));
+  assertEqual(placements.length, 1, "only the horizontal domino fits");
+  assertEqual(sig(placements[0]), sig([[0, 0], [0, 1]]));
+});
+
+test("placementsCovering filters to placements over the given tiles", () => {
+  const board = emptyBoard();
+  const placements = allValidPlacements(board, makeCard("farm", SHAPES.D2));
+
+  assertEqual(placementsCovering(placements, []).length, placements.length, "no constraint keeps all");
+
+  // A corner cell is covered by one horizontal and one vertical domino.
+  assertEqual(placementsCovering(placements, [{row: 0, col: 0}]).length, 2, "two dominoes cover the corner");
+
+  // Both corner cells together leave only the horizontal domino.
+  const both = placementsCovering(placements, [{row: 0, col: 0}, {row: 0, col: 1}]);
+  assertEqual(both.length, 1, "one placement covers both");
+  assertEqual(sig(both[0]), sig([[0, 0], [0, 1]]));
+});
+
+/* =====================================================================
  * DECK & GRANT
  * ===================================================================== */
 
