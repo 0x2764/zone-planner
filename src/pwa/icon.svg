@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="Zone Planner">
+  <!-- Full-bleed oatmeal "survey paper" background (opaque; safe for iOS + maskable). -->
+  <rect width="512" height="512" fill="#E9E0CA"/>
+
+  <!-- Four land-use parcels (farm / lake / forest / city) laid out as a zoning
+       block, kept within the central safe zone so it survives maskable cropping. -->
+  <g stroke="#33241A" stroke-opacity="0.28" stroke-width="4">
+    <rect x="116" y="116" width="133" height="133" rx="22" fill="#D07F2E"/>
+    <rect x="263" y="116" width="133" height="133" rx="22" fill="#4A86BC"/>
+    <rect x="116" y="263" width="133" height="133" rx="22" fill="#578F55"/>
+    <rect x="263" y="263" width="133" height="133" rx="22" fill="#8E1914"/>
+  </g>
+</svg>

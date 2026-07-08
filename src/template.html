@@ -4,6 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Zone Planner — council land-use solitaire</title>
+<!-- PWA: installable, offline-capable. Paths are relative so they work under the
+     GitHub Pages sub-path (/zone-planner/) and wherever the build is copied. -->
+<meta name="theme-color" content="#E9E0CA">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Zone Planner">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="apple-touch-icon" href="./icon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -66,6 +75,17 @@
     <button id="rulesCloseBtn">Close</button>
   </div>
 </div>
+
+<!-- Register the offline service worker. Feature-detected and guarded so opening
+     the lone self-contained HTML from file:// (where SWs and sibling files don't
+     exist) still boots the game normally. -->
+<script>
+if("serviceWorker" in navigator && location.protocol.startsWith("http")){
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js").catch(() => {});
+  });
+}
+</script>
 
 <script>
 {{GAME_JS}}

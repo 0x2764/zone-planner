@@ -25,15 +25,23 @@
 const fs = require("fs");
 const path = require("path");
 const vm = require("vm");
+const crypto = require("crypto");
 const { marked } = require("marked");
 
 const ROOT = __dirname;
 const SRC = path.join(ROOT, "src");
 const GAME_DIR = path.join(SRC, "game");
 const INSTR_DIR = path.join(SRC, "instructions");
+const PWA_DIR = path.join(SRC, "pwa");
 const TESTS_DIR = path.join(ROOT, "tests");
 const DIST = path.join(ROOT, "dist");
 const RULES = path.join(ROOT, "RULES.md");
+
+// The PWA assets copied verbatim into dist/ (sw.js is stamped separately, below).
+const PWA_STATIC = [
+  "manifest.webmanifest",
+  "icon-180.png", "icon-192.png", "icon-512.png", "icon-512-maskable.png",
+];
 
 // The game fragments, in dependency order. Instructions slot in between
 // scoring-core (which declares the registry array) and the fragments that
@@ -114,7 +122,22 @@ function build(){
     "{{TESTS_JS}}", testsJs);
   fs.writeFileSync(path.join(DIST, "zone-planner.tests.html"), testHtml);
 
+  emitPwaAssets(gameHtml);
+
   return { gameJs, testsJs, fxJs };
+}
+
+/** Copy the PWA static assets into dist/ and stamp the service worker with a
+ *  content hash of the shipped game HTML. The stamp changes sw.js's bytes on
+ *  every content change, so the browser installs a fresh worker and its
+ *  activate() purges the old cache — no manual cache-busting. */
+function emitPwaAssets(gameHtml){
+  for(const name of PWA_STATIC){
+    fs.copyFileSync(path.join(PWA_DIR, name), path.join(DIST, name));
+  }
+  const version = crypto.createHash("sha256").update(gameHtml).digest("hex").slice(0, 12);
+  const sw = inline(read(path.join(PWA_DIR, "sw.js")), "{{VERSION}}", version);
+  fs.writeFileSync(path.join(DIST, "sw.js"), sw);
 }
 
 /**
@@ -173,6 +196,14 @@ function checkBuiltOutput(){
     if(!html.includes("<table>"))
       fail(`${name} is missing the RULES.md tables (marked GFM output)`);
   }
+  // The PWA assets must have shipped into dist/, and the service worker's
+  // {{VERSION}} marker must have been stamped — an unstamped SW would reuse one
+  // cache name forever and never pick up new deploys.
+  for(const name of [...PWA_STATIC, "sw.js"]){
+    if(!fs.existsSync(path.join(DIST, name))) fail(`missing PWA asset dist/${name}`);
+  }
+  const sw = read(path.join(DIST, "sw.js"));
+  if(sw.includes("{{VERSION}}")) fail("sw.js has an unstamped {{VERSION}} marker");
   return ok;
 }
 

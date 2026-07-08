@@ -1,0 +1,16 @@
+{
+  "name": "Zone Planner",
+  "short_name": "Zone Planner",
+  "description": "A council land-use polyomino solitaire — an HTML5 game with no dependencies.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#E9E0CA",
+  "theme_color": "#E9E0CA",
+  "icons": [
+    { "src": "./icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "./icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
