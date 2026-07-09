@@ -50,6 +50,14 @@ function turnWithinSeason(){
   return turnIndex - seasonStart + 1;
 }
 
+/** Arrange four dealt instructions into the year's rolling season pairs:
+ *  Spring A&B, Summer B&C, Autumn C&D, Winter D&A. Each instruction object is
+ *  shared by its two seasons, so its locked-in target holds across both, and it
+ *  is scored and banked independently at the end of each. */
+function rollingSeasonPairs([a, b, c, d]){
+  return [[a, b], [b, c], [c, d], [d, a]];
+}
+
 /** Reset everything and start a fresh year. */
 function newGame(){
   cancelSeasonScoring();
@@ -60,10 +68,10 @@ function newGame(){
 
   deck = createDeck();
 
-  // Deal 8 distinct instruction templates, two per season, letting
-  // each lock in its random parameters for the year.
-  const dealt = shuffledCopy(INSTRUCTION_TEMPLATES).slice(0, 8).map(t => t.deal());
-  seasonPlans = [dealt.slice(0,2), dealt.slice(2,4), dealt.slice(4,6), dealt.slice(6,8)];
+  // Deal 4 distinct instruction templates and roll them across the year so each
+  // spans two adjacent seasons (Spring A&B … Winter D&A), scored at each end.
+  const dealt = shuffledCopy(INSTRUCTION_TEMPLATES).slice(0, 4).map(t => t.deal());
+  seasonPlans = rollingSeasonPairs(dealt);
 
   turnIndex = 0;
   bankedSeasons = [];

@@ -21,9 +21,9 @@ The game lasts one year of exactly **21 turns**, divided into four seasons of di
 
 ## The mayor's plan
 
-At the start of the year, the mayor issues a plan: **two scoring instructions for each season**, eight in total. The entire plan is visible from the first turn, so you can lay groundwork in spring for an instruction that won't be scored until winter.
+At the start of the year, the mayor issues a plan built from **four scoring instructions**, and rolls them across the seasons so each one spans **two adjacent seasons**: spring scores the first and second, summer the second and third, autumn the third and fourth, and winter the fourth and first. Every season still shows two instructions, and each instruction is scored twice — once at the end of each of its two seasons. The entire plan is visible from the first turn, so you can lay groundwork in spring for an instruction that won't be scored until winter — and a single well-placed improvement can pay off in two different seasons.
 
-Some instructions are fixed (Irrigation always cares about farms touching lakes, Greenbelt always about forests on the edge); others pick their target when the plan is issued (Alpine Resorts might reward forests hugging the mountains one year, cities the next). No instruction appears twice in the same year.
+Some instructions are fixed (Irrigation always cares about farms touching lakes, Greenbelt always about forests on the edge); others pick their target when the plan is issued (Alpine Resorts might reward forests hugging the mountains one year, cities the next). An instruction keeps the same target across both of the seasons it spans.
 
 ## Playing a turn
 
@@ -43,7 +43,7 @@ Your final score is the sum of the four banked season totals. The year always ru
 
 ## The instruction library
 
-Eight of these twelve are dealt each year. A ⟨type⟩ marks an instruction that picks its target improvement when the plan is issued.
+Four of these twelve are dealt each year, then rolled across the seasons so each spans two of them. A ⟨type⟩ marks an instruction that picks its target improvement when the plan is issued.
 
 | Instruction                                                       | Scoring                                                                                                                                                                   |
 |-------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------|

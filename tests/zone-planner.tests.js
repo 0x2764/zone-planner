@@ -243,6 +243,18 @@ test("createDeck never deals the same card twice", () => {
   }
 });
 
+test("rollingSeasonPairs rolls four instructions across the year", () => {
+  const pairs = rollingSeasonPairs(["A", "B", "C", "D"]);
+  assertDeepEqual(pairs, [["A", "B"], ["B", "C"], ["C", "D"], ["D", "A"]],
+    "Spring A&B, Summer B&C, Autumn C&D, Winter D&A");
+  assertEqual(pairs.length, SEASONS.length, "one pair per season");
+  assert(pairs.every(p => p.length === 2), "two instructions per season");
+  for(const instr of ["A", "B", "C", "D"]){
+    const seasons = pairs.filter(p => p.includes(instr)).length;
+    assertEqual(seasons, 2, `${instr} is scored in exactly two seasons`);
+  }
+});
+
 test("createGrantCard is a 1×1 of the requested type", () => {
   const grant = createGrantCard("lake");
   assertEqual(grant.type, "lake");
